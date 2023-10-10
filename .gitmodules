@@ -1,0 +1,6 @@
+[submodule "application/imgui"]
+	path = application/imgui
+	url = https://github.com/ocornut/imgui
+[submodule "application/serialib"]
+	path = application/serialib
+	url = https://github.com/imabot2/serialib

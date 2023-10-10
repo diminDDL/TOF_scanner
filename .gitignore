@@ -1,0 +1,8 @@
+# object files
+*.o
+
+# ini files
+*.ini
+
+# log files
+*.log
