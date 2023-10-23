@@ -17,6 +17,10 @@
 #endif
 #include <GLFW/glfw3.h> // Will drag system OpenGL headers
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/mat3x3.hpp>
 
 static void glfw_error_callback(int error, const char *description)
 {
@@ -29,11 +33,14 @@ char magic_symbol = 'A';
 
 std::mutex serialDlMutex;
 double deltaSerialTime = 0.0; // time between two screenshots
-void SerialThread(){
+void SerialThread()
+{
     serialib device;
-    //auto lastStart = std::chrono::system_clock::now();
-    while(true){
-        if(device.openDevice(selected_port, 115200) == 1){
+    // auto lastStart = std::chrono::system_clock::now();
+    while (true)
+    {
+        if (device.openDevice(selected_port, 115200) == 1)
+        {
             // bool new_data = false;
             std::vector<uint8_t> data;
             // while(true){
@@ -60,7 +67,9 @@ void SerialThread(){
             //         device.flushReceiver();
             //     }
             // }
-        }else{
+        }
+        else
+        {
             // std::cout << "Failed to open device" << std::endl;
             // sleep chrono
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
@@ -131,6 +140,167 @@ void guiThread()
     bool show_demo_window = false;
     ImVec4 clear_color = ImVec4(1.0f, 1.0f, 0.0f, 1.00f);
 
+    // TODO clean this up
+
+#define X_MAX 1000
+#define Y_MAX 1000
+
+    //glm::mat4 ver_mat = glm::mat4(1.0f);
+    glm::vec3 rot = glm::vec3(1.0f, 1.0f, 1.0f);
+    glm::vec3 points_color = glm::vec3(0.0f, 0.0f, 0.6f);
+    float color[4] = {0.0, 0.3, 0.0, 0.0};
+
+    float *points = new float[3 * X_MAX * Y_MAX];
+
+    float freq = 1;
+    float old_freq = 1;
+
+    // axis indicator
+    float axis[3 * 6] = {
+        0.0, 0.0, 0.0,
+        0.5, 0.0, 0.0,
+        0.0, 0.0, 0.0,
+        0.0, 0.5, 0.0,
+        0.0, 0.0, 0.0,
+        0.0, 0.0, 0.5};
+
+    // float triangle[3 * 3] = {
+    //     -0.5f,
+    //     -0.5f,
+    //     0.0f,
+    //     0.5f,
+    //     -0.5f,
+    //     0.0f,
+    //     0.5f,
+    //     0.5f,
+    //     0.0f,
+    // };
+
+    // triangle = [-0.5, -0.5, 0.0, 1.0, 0.0, 0.0,
+    //              0.5, -0.5, 0.0, 0.0, 1.0, 0.0,
+    //              0.0,  0.5, 0.0, 0.0, 0.0, 1.0]
+
+    //----------------------------------
+    char const *vertex_shader =
+        "#version 330 core\n"
+        "layout (location = 0) in vec3 position;\n"
+        "layout (location = 1) in vec2 aTexCoord;\n"
+        "out vec2 TexCoord;\n"
+        "out vec3 newColor;\n"
+        "uniform mat4 transform;\n"
+        "void main()\n"
+        "{\n"
+        "    gl_Position = transform * vec4(position, 1.0f);\n"
+        "    newColor = vec3(1.0f, 1.0f, 0.0f);\n"
+        "    TexCoord = vec2(position.x, position.y);\n"
+        "}\n ";
+
+    char const *fragment_shader =
+        "#version 330 core\n"
+        "in vec3 newColor;\n"
+        "in vec4 gl_FragCoord;\n"
+        //"out vec4 outColor;\n"
+        "out vec4 FragColor;\n"
+        "uniform vec3 f_color;\n"
+        "void main()\n"
+        "{\n"
+        "   FragColor = gl_FragCoord.z * vec4(f_color, 1.0f);\n"
+        //"    outColor = vec4(0.5f, 0.5f, 0.5f, 1.0f);\n"
+        "}\n";
+
+    GLuint ver_shader = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(ver_shader, 1, &vertex_shader, NULL);
+    glCompileShader(ver_shader);
+
+    int success;
+    char infoLog[512];
+
+    glGetShaderiv(ver_shader, GL_COMPILE_STATUS, &success);
+    if (!success)
+    {
+        glGetShaderInfoLog(ver_shader, 512, NULL, infoLog);
+        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n"
+                  << infoLog << std::endl;
+    }
+    else
+    {
+        std::cout << "SHADER SUCCESS\n";
+    }
+
+    GLuint frag_shader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(frag_shader, 1, &fragment_shader, NULL);
+    glCompileShader(frag_shader);
+
+    int success1;
+    char infoLog1[512];
+
+    glGetShaderiv(frag_shader, GL_COMPILE_STATUS, &success1);
+    if (!success1)
+    {
+        glGetShaderInfoLog(frag_shader, 512, NULL, infoLog);
+        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n"
+                  << infoLog1 << std::endl;
+    }
+    else
+    {
+        std::cout << "SHADER SUCCESS\n";
+    }
+
+    GLuint ID = glCreateProgram();
+    glAttachShader(ID, ver_shader);
+    glAttachShader(ID, frag_shader);
+    glLinkProgram(ID);
+
+    //----------------------------------
+
+    glUseProgram(ID);
+    // GLuint colorLoc = gl.glGetUniformLocation(shader, "mul")
+
+    unsigned int VAO;
+    glGenVertexArrays(1, &VAO);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
+    glEnableVertexAttribArray(0);
+
+    unsigned int texture;
+    glGenTextures(1, &texture);
+    GLuint framebuffer;
+    glGenFramebuffers(1, &framebuffer);
+    GLuint VBO;
+    glGenBuffers(1, &VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    //GLuint transform = glGetAttribLocation(ID, "transform");
+    GLuint position = glGetAttribLocation(ID, "position");
+    //GLuint color_pos = glGetAttribLocation(ID, "f_color");
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    ImVec2 size;
+    size.x = 512;
+    size.y = 512;
+
+    // float cameraViewA[16] =
+    //     {1.f, 0.f, 0.f, 0.f,
+    //      0.f, 1.f, 0.f, 0.f,
+    //      0.f, 0.f, 1.f, 0.f,
+    //      0.f, 0.f, 0.f, 1.f};
+
+    float cameraView[16] =
+        {1.f, 0.f, 0.f, 0.f,
+         0.f, 1.f, 0.f, 0.f,
+         0.f, 0.f, 1.f, 0.f,
+         0.f, 0.f, 0.f, 1.f};
+
+    //float cameraProjection[16];
+
+    bool transpose = false;
+
+    // TODO END
+
+    ImVec4 back_color = ImVec4(1.0f, 1.0f, 0.0f, 1.00f);
+
+    ImVec4 point_color = ImVec4(1.0f, 1.0f, 0.0f, 1.00f);
+
+    bool vsync = true;
+
     // Main loop
 #ifdef __EMSCRIPTEN__
     // For an Emscripten build we are disabling file-system access, so let's not attempt to do a fopen() of the imgui.ini file.
@@ -166,16 +336,32 @@ void guiThread()
             window_flags |= ImGuiWindowFlags_NoMove;
             window_flags |= ImGuiWindowFlags_NoScrollbar;
 
-            ImGui::Begin("TOF GUI", NULL, window_flags);                       // Create a window and append into it.
+            ImGui::Begin("TOF GUI", NULL, window_flags); // Create a window and append into it.
             ImGui::SetWindowSize(ImVec2(window_width, window_height));
             ImGui::SetWindowPos(ImVec2(0, 0));
-            ImGui::Text("Welcome to TOF controller");             // Display some text (you can use a format strings too)
+            ImGui::Text("Welcome to TOF controller");          // Display some text (you can use a format strings too)
             ImGui::Checkbox("Demo Window", &show_demo_window); // Edit bools storing our window open/close state
-            //ImGui::ColorEdit3("Color", (float *)&clear_color); // Edit 3 floats representing a color
-            ImGui::Text("Application average (%.1f FPS)", io.Framerate);
-            
+            ImGui::ColorEdit3("Color", (float *)&clear_color); // Edit 3 floats representing a color
+            // ImGui::Text("Application average (%.1f FPS)", io.Framerate);
+            char fps_buf[64];
+            sprintf(fps_buf, "Current FPS: %f", ImGui::GetIO().Framerate);
+            ImGui::Text(fps_buf);
+
+            char points_buf[64];
+            sprintf(points_buf, "Current Points: %i", X_MAX * Y_MAX);
+            ImGui::Text(points_buf);
+
+            char mem_buf[64];
+            float bandwith = (ImGui::GetIO().Framerate * 3 * X_MAX * Y_MAX * sizeof(float)) / (1000 * 1000);
+            sprintf(mem_buf, "Current mem bandwith: %iMBps", (int)bandwith);
+            ImGui::Text(mem_buf);
+
+            // checkbox for vsync
+            ImGui::Checkbox("Vsync", &vsync);
+            glfwSwapInterval(vsync);
+
             // insert some padding
-            ImGui::SetCursorPosY(ImGui::GetCursorPosY()+20);
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 20);
 
             // Create a progress bar
             ImGui::Text("Scan Progress");
@@ -189,16 +375,114 @@ void guiThread()
 
             ImGui::Text("Progress raw: %.1f", progress);
 
+            // plot 3D data
 
-
+            // TODO clean this up
 
             
-            // plot 3D data
+
+            ImGui::ColorEdit3("Background color", (float *)&back_color);
+
+            // shove back_color into color
+            color[0] = back_color.x;
+            color[1] = back_color.y;
+            color[2] = back_color.z;
+            color[3] = back_color.w;
+
+            ImGui::ColorEdit3("Points color", (float *)&point_color);
+
+            // shove point_color into points_color
+            points_color[0] = point_color.x;
+            points_color[1] = point_color.y;
+            points_color[2] = point_color.z;
+
+            ImGui::SliderFloat3("Rotation", glm::value_ptr(rot), 0, 1);
+
+            static bool auto_increment = false;
+            ImGui::Checkbox("Auto increment", &auto_increment);
+
+            if(auto_increment)
+                freq = 10 * progress;
+
+            ImGui::SliderFloat("Freq", &freq, 0.01, 10);
+
+            glBindVertexArray(VAO);
+            glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, size.x, size.y, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
+
+            glViewport(0, 0, size.x, size.y);
+            glClearColor(color[0], color[1], color[2], color[3]);
+            glClear(GL_COLOR_BUFFER_BIT);
+
+            // glUniformMatrix4fv()
+            // ver_mat = glm::rotate(ver_mat, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+            // glUniformMatrix4fv(transform, 1, GL_FALSE, glm::value_ptr(ver_mat));
+
+            if (freq != old_freq)
+            {
+
+                for (int x = 0; x < X_MAX; x++)
+                {
+                    for (int y = 0; y < Y_MAX; y++)
+                    {
+                        int position = 3 * (x + (y * Y_MAX));
+                        points[position + 0] = 0.5f * ((float)x / (X_MAX));
+                        points[position + 1] = 0.5f * (float)y / (Y_MAX);
+                        points[position + 2] = 0.5f * ((float)y / (Y_MAX)*sin(freq * glm::two_pi<float>() * (float)x / (X_MAX)));
+                    }
+                }
+                old_freq = freq;
+            }
+
+            // ver_mat = glm::rotate(ver_mat, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+            glm::mat4 temp = glm::make_mat4(cameraView);
+            temp = glm::rotate(temp, glm::two_pi<float>() * rot.x, glm::vec3(1, 0, 0));
+            temp = glm::rotate(temp, glm::two_pi<float>() * rot.y, glm::vec3(0, 1, 0));
+            temp = glm::rotate(temp, glm::two_pi<float>() * rot.z, glm::vec3(0, 0, 1));
+            unsigned int transformLoc = glGetUniformLocation(ID, "transform");
+            // glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(ver_mat));cameraView
+            // glm::rotate(glm::make_mat4(cameraView), glm::two_pi<float>() * rot.z, glm::vec3(0, 0, 1));
+            glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(temp));
+            unsigned int color_pos = glGetUniformLocation(ID, "f_color");
+            glUniform3fv(color_pos, 1, glm::value_ptr(points_color));
+
+            glVertexAttribPointer(position, 3, GL_FLOAT, transpose ? GL_TRUE : GL_FALSE, 12, (void *)0);
+            glEnableVertexAttribArray(position);
+
+            glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+            // glBufferData(GL_ARRAY_BUFFER, 4*3*6, axis, GL_STATIC_DRAW);
+            // glDrawArrays(GL_LINES, 0, 6);
+
+            glBufferData(GL_ARRAY_BUFFER, 4 * 3 * 6, axis, GL_STATIC_DRAW);
+            // glBufferData(GL_ARRAY_BUFFER, 4*3*3, triangle, GL_STATIC_DRAW);
+            glUseProgram(ID);
+            glBindVertexArray(VAO);
+            // glDrawArrays(GL_TRIANGLES, 0, 3);
+            glDrawArrays(GL_LINES, 0, 6);
+
+            glBufferData(GL_ARRAY_BUFFER, sizeof(float) * X_MAX * Y_MAX * 3, points, GL_DYNAMIC_DRAW);
+            glDrawArrays(GL_POINTS, 0, X_MAX * Y_MAX);
+
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+            ImGui::Image((ImTextureID)texture, ImVec2(size.x, size.y));
+
+            // TODO END
+
             ImGui::End();
 
             // se the background color to white
-            glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-        }else{
+            // glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+        }
+        else
+        {
             first_start = false;
             ImGuiWindowFlags window_flags = 0;
             window_flags |= ImGuiWindowFlags_NoTitleBar;
@@ -210,31 +494,31 @@ void guiThread()
 
             // define the size of the subwindow
             ImGui::SetWindowSize(ImVec2(300, 230));
-            if(window_width > 300 && window_height > 200)
-                ImGui::SetWindowPos(ImVec2((window_width/2)-150, (window_height/2)-100));
+            if (window_width > 300 && window_height > 200)
+                ImGui::SetWindowPos(ImVec2((window_width / 2) - 150, (window_height / 2) - 100));
 
             // Add a slider to define the resolution of the scan
             static int scan_resolution = 100;
-            ImGui::SetCursorPosX((300-100)/2);
+            ImGui::SetCursorPosX((300 - 100) / 2);
             ImGui::Text("Scan resolution (points per degree)");
-            ImGui::SetCursorPosX((300-100)/4);
+            ImGui::SetCursorPosX((300 - 100) / 4);
             ImGui::SliderInt("##Scan resolution", &scan_resolution, 1, 1000);
             // Add a sliders for the horizontal and vertical angle of the scan (in degrees)
             static int horizontal_angle = 90;
-            ImGui::SetCursorPosX((300-100)/2);
+            ImGui::SetCursorPosX((300 - 100) / 2);
             ImGui::Text("Horizontal angle");
-            ImGui::SetCursorPosX((300-100)/4);
+            ImGui::SetCursorPosX((300 - 100) / 4);
             ImGui::SliderInt("##Horizontal angle", &horizontal_angle, 1, 180);
             static int vertical_angle = 90;
-            ImGui::SetCursorPosX((300-100)/2);
+            ImGui::SetCursorPosX((300 - 100) / 2);
             ImGui::Text("Vertical angle");
-            ImGui::SetCursorPosX((300-100)/4);
+            ImGui::SetCursorPosX((300 - 100) / 4);
             ImGui::SliderInt("##Vertical angle", &vertical_angle, 1, 180);
 
             // insert some padding
-            ImGui::SetCursorPosY(ImGui::GetCursorPosY()+20);
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 20);
 
-            static char* items[99] = {0};
+            static char *items[99] = {0};
             static int item_current = -1; // If the selection isn't within 0..count, Combo won't display a preview
             ImGui::PushItemWidth(150);
             // ImGui::Combo("##PortSelector", &item_current, items, IM_ARRAYSIZE(items));
@@ -243,50 +527,56 @@ void guiThread()
                 for (int n = 0; n < IM_ARRAYSIZE(items); n++)
                 {
                     const bool is_selected = (item_current == n);
-                    if(items[n] != NULL){
-                        if (ImGui::Selectable(items[n], is_selected)){
+                    if (items[n] != NULL)
+                    {
+                        if (ImGui::Selectable(items[n], is_selected))
+                        {
                             item_current = n;
                             strcpy(selected_port, items[n]);
                         }
-                    
+
                         // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
-                        if (is_selected){
+                        if (is_selected)
+                        {
                             ImGui::SetItemDefaultFocus();
                         }
                     }
                 }
                 ImGui::EndCombo();
             }
-            //std::cout << selected_port << std::endl;
+            // std::cout << selected_port << std::endl;
 
             ImGui::SameLine();
 
             static bool scan = true;
             char device_name[99][24];
-            if(scan){
+            if (scan)
+            {
                 scan = false;
                 serialib device;
-                for (int i=0;i<98;i++)
+                for (int i = 0; i < 98; i++)
                 {
-                    // Prepare the port name (Windows)
-                    #if defined (_WIN32) || defined( _WIN64)
-                        sprintf (device_name[i],"\\\\.\\COM%d",i+1);
-                    #endif
+// Prepare the port name (Windows)
+#if defined(_WIN32) || defined(_WIN64)
+                    sprintf(device_name[i], "\\\\.\\COM%d", i + 1);
+#endif
 
-                    // Prepare the port name (Linux)
-                    #ifdef __linux__
-                        sprintf (device_name[i],"/dev/ttyACM%d",i);
-                    #endif
+// Prepare the port name (Linux)
+#ifdef __linux__
+                    sprintf(device_name[i], "/dev/ttyACM%d", i);
+#endif
 
                     // try to connect to the device
-                    if (device.openDevice(device_name[i],115200)==1)
+                    if (device.openDevice(device_name[i], 115200) == 1)
                     {
                         // printf ("Device detected on %s\n", device_name[i]);
                         // set the pointer to the array
                         items[i] = device_name[i];
                         // Close the device before testing the next port
                         device.closeDevice();
-                    }else{
+                    }
+                    else
+                    {
                         items[i] = NULL;
                     }
                 }
@@ -295,12 +585,11 @@ void guiThread()
             scan = ImGui::Button("Scan", ImVec2(100, 20));
 
             // center the button
-            ImGui::SetCursorPosX((300-100)/2);
-            ImGui::SetCursorPosY(ImGui::GetCursorPosY()+20);
+            ImGui::SetCursorPosX((300 - 100) / 2);
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 20);
             first_start = !ImGui::Button("Apply", ImVec2(100, 20));
-            
-            ImGui::End();
 
+            ImGui::End();
         }
 
         // Rendering
@@ -308,7 +597,7 @@ void guiThread()
         int display_w, display_h;
         glfwGetFramebufferSize(window, &display_w, &display_h);
         glViewport(0, 0, display_w, display_h);
-        //glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
+        glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
         glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
