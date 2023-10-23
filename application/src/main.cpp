@@ -31,10 +31,10 @@ std::mutex serialDlMutex;
 double deltaSerialTime = 0.0; // time between two screenshots
 void SerialThread(){
     serialib device;
-    auto lastStart = std::chrono::system_clock::now();
+    //auto lastStart = std::chrono::system_clock::now();
     while(true){
         if(device.openDevice(selected_port, 115200) == 1){
-            bool new_data = false;
+            // bool new_data = false;
             std::vector<uint8_t> data;
             // while(true){
             //     newDataMutex.lock();
@@ -166,13 +166,34 @@ void guiThread()
             window_flags |= ImGuiWindowFlags_NoMove;
             window_flags |= ImGuiWindowFlags_NoScrollbar;
 
-            ImGui::Begin("EL STREAMER", NULL, window_flags);                       // Create a window called "Hello, world!" and append into it.
+            ImGui::Begin("TOF GUI", NULL, window_flags);                       // Create a window and append into it.
             ImGui::SetWindowSize(ImVec2(window_width, window_height));
             ImGui::SetWindowPos(ImVec2(0, 0));
-            ImGui::Text("Welcome to EL Streamer");             // Display some text (you can use a format strings too)
+            ImGui::Text("Welcome to TOF controller");             // Display some text (you can use a format strings too)
             ImGui::Checkbox("Demo Window", &show_demo_window); // Edit bools storing our window open/close state
-            ImGui::ColorEdit3("Color", (float *)&clear_color); // Edit 3 floats representing a color
+            //ImGui::ColorEdit3("Color", (float *)&clear_color); // Edit 3 floats representing a color
             ImGui::Text("Application average (%.1f FPS)", io.Framerate);
+            
+            // insert some padding
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY()+20);
+
+            // Create a progress bar
+            ImGui::Text("Scan Progress");
+            static float progress = 0.0f, progress_dir = 1.0f;
+            ImGui::ProgressBar(progress, ImVec2(0.0f, 0.0f));
+            progress += progress_dir * 0.4f * ImGui::GetIO().DeltaTime;
+            if (progress >= +1.1f)
+            {
+                progress = 0.0f;
+            }
+
+            ImGui::Text("Progress raw: %.1f", progress);
+
+
+
+
+            
+            // plot 3D data
             ImGui::End();
 
             // se the background color to white
@@ -188,9 +209,30 @@ void guiThread()
             ImGui::Begin("TOF Mapper config", NULL, window_flags);
 
             // define the size of the subwindow
-            ImGui::SetWindowSize(ImVec2(300, 200));
+            ImGui::SetWindowSize(ImVec2(300, 230));
             if(window_width > 300 && window_height > 200)
                 ImGui::SetWindowPos(ImVec2((window_width/2)-150, (window_height/2)-100));
+
+            // Add a slider to define the resolution of the scan
+            static int scan_resolution = 100;
+            ImGui::SetCursorPosX((300-100)/2);
+            ImGui::Text("Scan resolution (points per degree)");
+            ImGui::SetCursorPosX((300-100)/4);
+            ImGui::SliderInt("##Scan resolution", &scan_resolution, 1, 1000);
+            // Add a sliders for the horizontal and vertical angle of the scan (in degrees)
+            static int horizontal_angle = 90;
+            ImGui::SetCursorPosX((300-100)/2);
+            ImGui::Text("Horizontal angle");
+            ImGui::SetCursorPosX((300-100)/4);
+            ImGui::SliderInt("##Horizontal angle", &horizontal_angle, 1, 180);
+            static int vertical_angle = 90;
+            ImGui::SetCursorPosX((300-100)/2);
+            ImGui::Text("Vertical angle");
+            ImGui::SetCursorPosX((300-100)/4);
+            ImGui::SliderInt("##Vertical angle", &vertical_angle, 1, 180);
+
+            // insert some padding
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY()+20);
 
             static char* items[99] = {0};
             static int item_current = -1; // If the selection isn't within 0..count, Combo won't display a preview
@@ -254,7 +296,7 @@ void guiThread()
 
             // center the button
             ImGui::SetCursorPosX((300-100)/2);
-            ImGui::SetCursorPosY(150);
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY()+20);
             first_start = !ImGui::Button("Apply", ImVec2(100, 20));
             
             ImGui::End();
