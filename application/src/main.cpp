@@ -146,7 +146,8 @@ void guiThread()
 #define Y_MAX 1000
 
     // glm::mat4 ver_mat = glm::mat4(1.0f);
-    glm::vec3 rot = glm::vec3(1.0f, 1.0f, 1.0f);
+    glm::vec3 rot = glm::vec3(0.5f, 0.0f, 0.0f);
+    glm::vec3 trans = glm::vec3(0.0f, 0.0f, 0.0f);
     glm::vec3 points_color = glm::vec3(0.0f, 0.0f, 0.6f);
     float color[4] = {0.0, 0.3, 0.0, 0.0};
 
@@ -301,6 +302,12 @@ void guiThread()
 
     bool vsync = true;
 
+    glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
+    glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+    glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+
+    glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+
     // TODO END
 
     // Main loop
@@ -382,6 +389,9 @@ void guiThread()
             static bool isDragging = false;
             static double lastX, lastY;
 
+            static bool isDraggingTranslation = false;
+            static double lastTransX, lastTransY;
+
             // TODO clean this up
 
             ImGui::ColorEdit3("Background color", (float *)&back_color);
@@ -400,6 +410,8 @@ void guiThread()
             points_color[2] = point_color.z;
 
             ImGui::SliderFloat3("Rotation", glm::value_ptr(rot), 0, 1);
+
+            ImGui::SliderFloat3("Translation", glm::value_ptr(trans), 0, 1);
 
             static bool auto_increment = false;
             ImGui::Checkbox("Auto increment", &auto_increment);
@@ -443,6 +455,9 @@ void guiThread()
             temp = glm::rotate(temp, glm::two_pi<float>() * rot.x, glm::vec3(1, 0, 0));
             temp = glm::rotate(temp, glm::two_pi<float>() * rot.y, glm::vec3(0, 1, 0));
             temp = glm::rotate(temp, glm::two_pi<float>() * rot.z, glm::vec3(0, 0, 1));
+
+            temp = glm::translate(temp, trans);
+
             unsigned int transformLoc = glGetUniformLocation(ID, "transform");
 
             glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(temp));
@@ -495,6 +510,34 @@ void guiThread()
             else
             {
                 isDragging = false;
+            }
+
+            if (isHovered && ImGui::IsMouseDown(2)) // Right mouse button
+            {
+                if (!isDraggingTranslation)
+                {
+                    isDraggingTranslation = true;
+                    glfwGetCursorPos(window, &lastTransX, &lastTransY);
+                }
+                else
+                {
+                    double mouseX, mouseY;
+                    glfwGetCursorPos(window, &mouseX, &mouseY);
+
+                    double offsetX = mouseX - lastTransX;
+                    double offsetY = lastTransY - mouseY; // This inverts the y-axis translation
+
+                    const float translationSensitivity = 0.01f; // Adjust this value to your liking
+                    trans.x += offsetX * translationSensitivity;
+                    trans.y += offsetY * translationSensitivity;
+
+                    lastTransX = mouseX;
+                    lastTransY = mouseY;
+                }
+            }
+            else
+            {
+                isDraggingTranslation = false;
             }
 
             // TODO END
