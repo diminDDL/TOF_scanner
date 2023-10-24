@@ -213,7 +213,7 @@ void guiThread()
         "void main() {\n"
         "    float normalizedDistance = v_distance / max_distance;\n"
         "    vec3 turboColor = TurboColormap(normalizedDistance);\n"
-        "    float brightnessAdjustment = mix(0.7, 1.0, normalizedDistance);\n"
+        "    float brightnessAdjustment = mix(0.7, 1.0, gl_FragCoord.z);\n"
         "    vec3 adjustedColor = turboColor * brightnessAdjustment;\n"
         "    FragColor = vec4(adjustedColor, 1.0);\n"
         "}\n";
@@ -478,6 +478,8 @@ void guiThread()
 
             glBufferData(GL_ARRAY_BUFFER, sizeof(float) * X_MAX * Y_MAX * 3, points, GL_DYNAMIC_DRAW);
             glDrawArrays(GL_POINTS, 0, X_MAX * Y_MAX);
+
+            glEnable(GL_DEPTH_TEST);
 
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
 

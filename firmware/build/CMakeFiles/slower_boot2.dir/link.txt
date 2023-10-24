@@ -1,0 +1,1 @@
+/usr/bin/arm-none-eabi-gcc -mcpu=cortex-m0plus -mthumb -Og -g -Wl,--build-id=none --specs=nosys.specs -nostartfiles -Wl,--script=/home/dmytro/Documents/pico/pico-sdk/src/rp2_common/boot_stage2/boot_stage2.ld -Wl,-Map=slower_boot2.elf.map "CMakeFiles/slower_boot2.dir/home/dmytro/Documents/pico/pico-sdk/src/rp2_common/boot_stage2/compile_time_choice.S.obj" -o slower_boot2.elf 
