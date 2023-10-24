@@ -164,22 +164,6 @@ void guiThread()
         0.0, 0.0, 0.0,
         0.0, 0.0, 0.5};
 
-    // float triangle[3 * 3] = {
-    //     -0.5f,
-    //     -0.5f,
-    //     0.0f,
-    //     0.5f,
-    //     -0.5f,
-    //     0.0f,
-    //     0.5f,
-    //     0.5f,
-    //     0.0f,
-    // };
-
-    // triangle = [-0.5, -0.5, 0.0, 1.0, 0.0, 0.0,
-    //              0.5, -0.5, 0.0, 0.0, 1.0, 0.0,
-    //              0.0,  0.5, 0.0, 0.0, 0.0, 1.0]
-
     //----------------------------------
     char const *vertex_shader =
         "#version 330 core\n"
@@ -199,13 +183,11 @@ void guiThread()
         "#version 330 core\n"
         "in vec3 newColor;\n"
         "in vec4 gl_FragCoord;\n"
-        //"out vec4 outColor;\n"
         "out vec4 FragColor;\n"
         "uniform vec3 f_color;\n"
         "void main()\n"
         "{\n"
         "   FragColor = gl_FragCoord.z * vec4(f_color, 1.0f);\n"
-        //"    outColor = vec4(0.5f, 0.5f, 0.5f, 1.0f);\n"
         "}\n";
 
     GLuint ver_shader = glCreateShader(GL_VERTEX_SHADER);
@@ -254,7 +236,6 @@ void guiThread()
     //----------------------------------
 
     glUseProgram(ID);
-    // GLuint colorLoc = gl.glGetUniformLocation(shader, "mul")
 
     unsigned int VAO;
     glGenVertexArrays(1, &VAO);
@@ -268,20 +249,12 @@ void guiThread()
     GLuint VBO;
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    //GLuint transform = glGetAttribLocation(ID, "transform");
     GLuint position = glGetAttribLocation(ID, "position");
-    //GLuint color_pos = glGetAttribLocation(ID, "f_color");
     glBindTexture(GL_TEXTURE_2D, texture);
 
     ImVec2 size;
     size.x = 512;
     size.y = 512;
-
-    // float cameraViewA[16] =
-    //     {1.f, 0.f, 0.f, 0.f,
-    //      0.f, 1.f, 0.f, 0.f,
-    //      0.f, 0.f, 1.f, 0.f,
-    //      0.f, 0.f, 0.f, 1.f};
 
     float cameraView[16] =
         {1.f, 0.f, 0.f, 0.f,
@@ -289,15 +262,13 @@ void guiThread()
          0.f, 0.f, 1.f, 0.f,
          0.f, 0.f, 0.f, 1.f};
 
-    //float cameraProjection[16];
-
     bool transpose = false;
 
     // TODO END
 
-    ImVec4 back_color = ImVec4(1.0f, 1.0f, 0.0f, 1.00f);
+    ImVec4 back_color = ImVec4(1.0f, 1.0f, 1.0f, 1.00f);
 
-    ImVec4 point_color = ImVec4(1.0f, 1.0f, 0.0f, 1.00f);
+    ImVec4 point_color = ImVec4(1.0f, 1.0f, 1.0f, 1.00f);
 
     bool vsync = true;
 
@@ -420,10 +391,6 @@ void guiThread()
             glClearColor(color[0], color[1], color[2], color[3]);
             glClear(GL_COLOR_BUFFER_BIT);
 
-            // glUniformMatrix4fv()
-            // ver_mat = glm::rotate(ver_mat, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
-            // glUniformMatrix4fv(transform, 1, GL_FALSE, glm::value_ptr(ver_mat));
-
             if (freq != old_freq)
             {
 
@@ -440,14 +407,12 @@ void guiThread()
                 old_freq = freq;
             }
 
-            // ver_mat = glm::rotate(ver_mat, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
             glm::mat4 temp = glm::make_mat4(cameraView);
             temp = glm::rotate(temp, glm::two_pi<float>() * rot.x, glm::vec3(1, 0, 0));
             temp = glm::rotate(temp, glm::two_pi<float>() * rot.y, glm::vec3(0, 1, 0));
             temp = glm::rotate(temp, glm::two_pi<float>() * rot.z, glm::vec3(0, 0, 1));
             unsigned int transformLoc = glGetUniformLocation(ID, "transform");
-            // glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(ver_mat));cameraView
-            // glm::rotate(glm::make_mat4(cameraView), glm::two_pi<float>() * rot.z, glm::vec3(0, 0, 1));
+
             glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(temp));
             unsigned int color_pos = glGetUniformLocation(ID, "f_color");
             glUniform3fv(color_pos, 1, glm::value_ptr(points_color));
@@ -457,14 +422,11 @@ void guiThread()
 
             glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
-            // glBufferData(GL_ARRAY_BUFFER, 4*3*6, axis, GL_STATIC_DRAW);
-            // glDrawArrays(GL_LINES, 0, 6);
-
             glBufferData(GL_ARRAY_BUFFER, 4 * 3 * 6, axis, GL_STATIC_DRAW);
-            // glBufferData(GL_ARRAY_BUFFER, 4*3*3, triangle, GL_STATIC_DRAW);
+    
             glUseProgram(ID);
             glBindVertexArray(VAO);
-            // glDrawArrays(GL_TRIANGLES, 0, 3);
+    
             glDrawArrays(GL_LINES, 0, 6);
 
             glBufferData(GL_ARRAY_BUFFER, sizeof(float) * X_MAX * Y_MAX * 3, points, GL_DYNAMIC_DRAW);
@@ -478,8 +440,6 @@ void guiThread()
 
             ImGui::End();
 
-            // se the background color to white
-            // glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
         }
         else
         {
