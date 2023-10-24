@@ -165,30 +165,84 @@ void guiThread()
         0.0, 0.0, 0.5};
 
     //----------------------------------
-    char const *vertex_shader =
-        "#version 330 core\n"
-        "layout (location = 0) in vec3 position;\n"
-        "layout (location = 1) in vec2 aTexCoord;\n"
-        "out vec2 TexCoord;\n"
-        "out vec3 newColor;\n"
-        "uniform mat4 transform;\n"
-        "void main()\n"
-        "{\n"
-        "    gl_Position = transform * vec4(position, 1.0f);\n"
-        "    newColor = vec3(1.0f, 1.0f, 0.0f);\n"
-        "    TexCoord = vec2(position.x, position.y);\n"
-        "}\n ";
+    // char const *vertex_shader_OLD =
+    //     "#version 330 core\n"
+    //     "layout (location = 0) in vec3 position;\n"
+    //     "layout (location = 1) in vec2 aTexCoord;\n"
+    //     "out vec2 TexCoord;\n"
+    //     "out vec3 newColor;\n"
+    //     "uniform mat4 transform;\n"
+    //     "void main()\n"
+    //     "{\n"
+    //     "    gl_Position = transform * vec4(position, 1.0f);\n"
+    //     "    newColor = vec3(1.0f, 1.0f, 0.0f);\n"
+    //     "    TexCoord = vec2(position.x, position.y);\n"
+    //     "}\n ";
+
+
+    char const *vertex_shader = 
+    "#version 330 core\n"
+    "layout (location = 0) in vec3 position;\n"
+    "layout (location = 1) in vec2 aTexCoord;\n"
+    "out vec2 TexCoord;\n"
+    "out vec3 newColor;\n"
+    "out float v_distance; // Output distance to fragment shader\n"
+    "uniform mat4 transform;\n"
+    "void main()\n"
+    "{\n"
+    "    gl_Position = transform * vec4(position, 1.0f);\n"
+    "    newColor = vec3(1.0f, 1.0f, 0.0f); // Or any other logic for color\n"
+    "    TexCoord = vec2(position.x, position.y); // Or use aTexCoord if it's different\n"
+    "    v_distance = length(position); // Calculate distance to origin\n"
+    "}\n";
+
+
+    // char const *fragment_shader_OLD =
+    //     "#version 330 core\n"
+    //     "in vec3 newColor;\n"
+    //     "in vec4 gl_FragCoord;\n"
+    //     "out vec4 FragColor;\n"
+    //     "uniform vec3 f_color;\n"
+    //     "void main()\n"
+    //     "{\n"
+    //     "   FragColor = gl_FragCoord.z * vec4(f_color, 1.0f);\n"
+    //     "}\n";
 
     char const *fragment_shader =
-        "#version 330 core\n"
-        "in vec3 newColor;\n"
-        "in vec4 gl_FragCoord;\n"
-        "out vec4 FragColor;\n"
-        "uniform vec3 f_color;\n"
-        "void main()\n"
-        "{\n"
-        "   FragColor = gl_FragCoord.z * vec4(f_color, 1.0f);\n"
-        "}\n";
+    "#version 330 core\n"
+    "in vec3 newColor;\n"
+    "in vec4 gl_FragCoord;\n"
+    "in float v_distance; // Input distance from vertex shader\n"
+    "out vec4 FragColor;\n"
+    "uniform float max_distance;\n"
+    "uniform vec3 f_color;\n"
+    "float saturate(float x) {\n"
+    "    return clamp(x, 0.0, 1.0);\n"
+    "}\n"
+    "vec3 TurboColormap(in float x) {\n"
+    "    const vec4 kRedVec4 = vec4(0.13572138, 4.61539260, -42.66032258, 132.13108234);\n"
+    "    const vec4 kGreenVec4 = vec4(0.09140261, 2.19418839, 4.84296658, -14.18503333);\n"
+    "    const vec4 kBlueVec4 = vec4(0.10667330, 12.64194608, -60.58204836, 110.36276771);\n"
+    "    const vec2 kRedVec2 = vec2(-152.94239396, 59.28637943);\n"
+    "    const vec2 kGreenVec2 = vec2(4.27729857, 2.82956604);\n"
+    "    const vec2 kBlueVec2 = vec2(-89.90310912, 27.34824973);\n"
+    "    x = saturate(x);\n"
+    "    vec4 v4 = vec4(1.0, x, x * x, x * x * x);\n"
+    "    vec2 v2 = v4.zw * v4.z;\n"
+    "    return vec3(\n"
+    "        dot(v4, kRedVec4) + dot(v2, kRedVec2),\n"
+    "        dot(v4, kGreenVec4) + dot(v2, kGreenVec2),\n"
+    "        dot(v4, kBlueVec4) + dot(v2, kBlueVec2)\n"
+    "    );\n"
+    "}\n"
+    "void main() {\n"
+    "    float normalizedDistance = v_distance / max_distance;\n"
+    "    vec3 turboColor = TurboColormap(normalizedDistance);\n"
+    "    FragColor = vec4(turboColor, 1.0);\n"
+    "    //FragColor = vec4(v_distance, 0.0, 0.0, 1.0);\n"
+    "}\n";
+
+
 
     GLuint ver_shader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(ver_shader, 1, &vertex_shader, NULL);
@@ -263,6 +317,11 @@ void guiThread()
          0.f, 0.f, 0.f, 1.f};
 
     bool transpose = false;
+
+
+    float maxDistance = 0.8f; // Example value, adjust as needed
+    unsigned int maxDistanceLoc = glGetUniformLocation(ID, "max_distance");
+    glUniform1f(maxDistanceLoc, maxDistance);
 
     // TODO END
 
