@@ -78,7 +78,7 @@ void SerialThread()
 }
 
 uint window_width = 800;
-uint window_height = 600;
+uint window_height = 800;
 // GUI thread
 GLuint textureID;
 void guiThread()
@@ -145,7 +145,7 @@ void guiThread()
 #define X_MAX 1000
 #define Y_MAX 1000
 
-    //glm::mat4 ver_mat = glm::mat4(1.0f);
+    // glm::mat4 ver_mat = glm::mat4(1.0f);
     glm::vec3 rot = glm::vec3(1.0f, 1.0f, 1.0f);
     glm::vec3 points_color = glm::vec3(0.0f, 0.0f, 0.6f);
     float color[4] = {0.0, 0.3, 0.0, 0.0};
@@ -153,7 +153,7 @@ void guiThread()
     float *points = new float[3 * X_MAX * Y_MAX];
 
     float freq = 1;
-    float old_freq = 1;
+    float old_freq = !freq;
 
     // axis indicator
     float axis[3 * 6] = {
@@ -165,84 +165,57 @@ void guiThread()
         0.0, 0.0, 0.5};
 
     //----------------------------------
-    // char const *vertex_shader_OLD =
-    //     "#version 330 core\n"
-    //     "layout (location = 0) in vec3 position;\n"
-    //     "layout (location = 1) in vec2 aTexCoord;\n"
-    //     "out vec2 TexCoord;\n"
-    //     "out vec3 newColor;\n"
-    //     "uniform mat4 transform;\n"
-    //     "void main()\n"
-    //     "{\n"
-    //     "    gl_Position = transform * vec4(position, 1.0f);\n"
-    //     "    newColor = vec3(1.0f, 1.0f, 0.0f);\n"
-    //     "    TexCoord = vec2(position.x, position.y);\n"
-    //     "}\n ";
 
-
-    char const *vertex_shader = 
-    "#version 330 core\n"
-    "layout (location = 0) in vec3 position;\n"
-    "layout (location = 1) in vec2 aTexCoord;\n"
-    "out vec2 TexCoord;\n"
-    "out vec3 newColor;\n"
-    "out float v_distance; // Output distance to fragment shader\n"
-    "uniform mat4 transform;\n"
-    "void main()\n"
-    "{\n"
-    "    gl_Position = transform * vec4(position, 1.0f);\n"
-    "    newColor = vec3(1.0f, 1.0f, 0.0f); // Or any other logic for color\n"
-    "    TexCoord = vec2(position.x, position.y); // Or use aTexCoord if it's different\n"
-    "    v_distance = length(position); // Calculate distance to origin\n"
-    "}\n";
-
-
-    // char const *fragment_shader_OLD =
-    //     "#version 330 core\n"
-    //     "in vec3 newColor;\n"
-    //     "in vec4 gl_FragCoord;\n"
-    //     "out vec4 FragColor;\n"
-    //     "uniform vec3 f_color;\n"
-    //     "void main()\n"
-    //     "{\n"
-    //     "   FragColor = gl_FragCoord.z * vec4(f_color, 1.0f);\n"
-    //     "}\n";
+    char const *vertex_shader =
+        "#version 330 core\n"
+        "layout (location = 0) in vec3 position;\n"
+        "layout (location = 1) in vec2 aTexCoord;\n"
+        "out vec2 TexCoord;\n"
+        "out vec3 newColor;\n"
+        "out float v_distance; // Output distance to fragment shader\n"
+        "uniform mat4 transform;\n"
+        "void main()\n"
+        "{\n"
+        "    gl_Position = transform * vec4(position, 1.0f);\n"
+        "    newColor = vec3(1.0f, 1.0f, 0.0f); // Or any other logic for color\n"
+        "    TexCoord = vec2(position.x, position.y); // Or use aTexCoord if it's different\n"
+        "    v_distance = length(position); // Calculate distance to origin\n"
+        "}\n";
 
     char const *fragment_shader =
-    "#version 330 core\n"
-    "in vec3 newColor;\n"
-    "in vec4 gl_FragCoord;\n"
-    "in float v_distance; // Input distance from vertex shader\n"
-    "out vec4 FragColor;\n"
-    "uniform float max_distance;\n"
-    "uniform vec3 f_color;\n"
-    "float saturate(float x) {\n"
-    "    return clamp(x, 0.0, 1.0);\n"
-    "}\n"
-    "vec3 TurboColormap(in float x) {\n"
-    "    const vec4 kRedVec4 = vec4(0.13572138, 4.61539260, -42.66032258, 132.13108234);\n"
-    "    const vec4 kGreenVec4 = vec4(0.09140261, 2.19418839, 4.84296658, -14.18503333);\n"
-    "    const vec4 kBlueVec4 = vec4(0.10667330, 12.64194608, -60.58204836, 110.36276771);\n"
-    "    const vec2 kRedVec2 = vec2(-152.94239396, 59.28637943);\n"
-    "    const vec2 kGreenVec2 = vec2(4.27729857, 2.82956604);\n"
-    "    const vec2 kBlueVec2 = vec2(-89.90310912, 27.34824973);\n"
-    "    x = saturate(x);\n"
-    "    vec4 v4 = vec4(1.0, x, x * x, x * x * x);\n"
-    "    vec2 v2 = v4.zw * v4.z;\n"
-    "    return vec3(\n"
-    "        dot(v4, kRedVec4) + dot(v2, kRedVec2),\n"
-    "        dot(v4, kGreenVec4) + dot(v2, kGreenVec2),\n"
-    "        dot(v4, kBlueVec4) + dot(v2, kBlueVec2)\n"
-    "    );\n"
-    "}\n"
-    "void main() {\n"
-    "    float normalizedDistance = v_distance / max_distance;\n"
-    "    vec3 turboColor = TurboColormap(normalizedDistance);\n"
-    "    FragColor = vec4(turboColor, 1.0);\n"
-    "    //FragColor = vec4(v_distance, 0.0, 0.0, 1.0);\n"
-    "}\n";
-
-
+        "#version 330 core\n"
+        "in vec3 newColor;\n"
+        "in vec4 gl_FragCoord;\n"
+        "in float v_distance; // Input distance from vertex shader\n"
+        "out vec4 FragColor;\n"
+        "uniform float max_distance;\n"
+        "uniform vec3 f_color;\n"
+        "float saturate(float x) {\n"
+        "    return clamp(x, 0.0, 1.0);\n"
+        "}\n"
+        "vec3 TurboColormap(in float x) {\n"
+        "    const vec4 kRedVec4 = vec4(0.13572138, 4.61539260, -42.66032258, 132.13108234);\n"
+        "    const vec4 kGreenVec4 = vec4(0.09140261, 2.19418839, 4.84296658, -14.18503333);\n"
+        "    const vec4 kBlueVec4 = vec4(0.10667330, 12.64194608, -60.58204836, 110.36276771);\n"
+        "    const vec2 kRedVec2 = vec2(-152.94239396, 59.28637943);\n"
+        "    const vec2 kGreenVec2 = vec2(4.27729857, 2.82956604);\n"
+        "    const vec2 kBlueVec2 = vec2(-89.90310912, 27.34824973);\n"
+        "    x = saturate(x);\n"
+        "    vec4 v4 = vec4(1.0, x, x * x, x * x * x);\n"
+        "    vec2 v2 = v4.zw * v4.z;\n"
+        "    return vec3(\n"
+        "        dot(v4, kRedVec4) + dot(v2, kRedVec2),\n"
+        "        dot(v4, kGreenVec4) + dot(v2, kGreenVec2),\n"
+        "        dot(v4, kBlueVec4) + dot(v2, kBlueVec2)\n"
+        "    );\n"
+        "}\n"
+        "void main() {\n"
+        "    float normalizedDistance = v_distance / max_distance;\n"
+        "    vec3 turboColor = TurboColormap(normalizedDistance);\n"
+        "    float brightnessAdjustment = mix(0.7, 1.0, normalizedDistance);\n"
+        "    vec3 adjustedColor = turboColor * brightnessAdjustment;\n"
+        "    FragColor = vec4(adjustedColor, 1.0);\n"
+        "}\n";
 
     GLuint ver_shader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(ver_shader, 1, &vertex_shader, NULL);
@@ -318,18 +291,17 @@ void guiThread()
 
     bool transpose = false;
 
-
     float maxDistance = 0.8f; // Example value, adjust as needed
     unsigned int maxDistanceLoc = glGetUniformLocation(ID, "max_distance");
     glUniform1f(maxDistanceLoc, maxDistance);
-
-    // TODO END
 
     ImVec4 back_color = ImVec4(1.0f, 1.0f, 1.0f, 1.00f);
 
     ImVec4 point_color = ImVec4(1.0f, 1.0f, 1.0f, 1.00f);
 
     bool vsync = true;
+
+    // TODO END
 
     // Main loop
 #ifdef __EMSCRIPTEN__
@@ -407,9 +379,10 @@ void guiThread()
 
             // plot 3D data
 
-            // TODO clean this up
+            static bool isDragging = false;
+            static double lastX, lastY;
 
-            
+            // TODO clean this up
 
             ImGui::ColorEdit3("Background color", (float *)&back_color);
 
@@ -431,7 +404,7 @@ void guiThread()
             static bool auto_increment = false;
             ImGui::Checkbox("Auto increment", &auto_increment);
 
-            if(auto_increment)
+            if (auto_increment)
                 freq = 10 * progress;
 
             ImGui::SliderFloat("Freq", &freq, 0.01, 10);
@@ -482,10 +455,10 @@ void guiThread()
             glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
             glBufferData(GL_ARRAY_BUFFER, 4 * 3 * 6, axis, GL_STATIC_DRAW);
-    
+
             glUseProgram(ID);
             glBindVertexArray(VAO);
-    
+
             glDrawArrays(GL_LINES, 0, 6);
 
             glBufferData(GL_ARRAY_BUFFER, sizeof(float) * X_MAX * Y_MAX * 3, points, GL_DYNAMIC_DRAW);
@@ -494,11 +467,39 @@ void guiThread()
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
             ImGui::Image((ImTextureID)texture, ImVec2(size.x, size.y));
+            bool isHovered = ImGui::IsItemHovered();
+
+            if (isHovered && ImGui::IsMouseDown(0))
+            {
+                if (!isDragging)
+                {
+                    isDragging = true;
+                    glfwGetCursorPos(window, &lastX, &lastY);
+                }
+                else
+                {
+                    double mouseX, mouseY;
+                    glfwGetCursorPos(window, &mouseX, &mouseY);
+
+                    double offsetX = mouseX - lastX;
+                    double offsetY = mouseY - lastY;
+
+                    const float sensitivity = 0.001f;
+                    rot.y += offsetX * sensitivity;
+                    rot.x += offsetY * sensitivity;
+
+                    lastX = mouseX;
+                    lastY = mouseY;
+                }
+            }
+            else
+            {
+                isDragging = false;
+            }
 
             // TODO END
 
             ImGui::End();
-
         }
         else
         {
