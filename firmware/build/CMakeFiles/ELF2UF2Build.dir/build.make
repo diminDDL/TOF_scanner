@@ -88,7 +88,7 @@ elf2uf2/src/ELF2UF2Build-stamp/ELF2UF2Build-build: elf2uf2/src/ELF2UF2Build-stam
 elf2uf2/src/ELF2UF2Build-stamp/ELF2UF2Build-configure: elf2uf2/tmp/ELF2UF2Build-cfgcmd.txt
 elf2uf2/src/ELF2UF2Build-stamp/ELF2UF2Build-configure: elf2uf2/src/ELF2UF2Build-stamp/ELF2UF2Build-patch
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/dmytro/Documents/projects/TOF_scanner/firmware/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Performing configure step for 'ELF2UF2Build'"
-	cd /home/dmytro/Documents/projects/TOF_scanner/firmware/build/elf2uf2 && /usr/bin/cmake -DCMAKE_MAKE_PROGRAM:FILEPATH=/usr/bin/gmake "-GUnix Makefiles" -S /home/dmytro/Documents/pico/pico-sdk/tools/elf2uf2 -B /home/dmytro/Documents/projects/TOF_scanner/firmware/build/elf2uf2
+	cd /home/dmytro/Documents/projects/TOF_scanner/firmware/build/elf2uf2 && /usr/bin/cmake -DCMAKE_MAKE_PROGRAM:FILEPATH=/usr/bin/gmake "-GUnix Makefiles" -S /home/dmytro/pico/pico/pico-sdk/tools/elf2uf2 -B /home/dmytro/Documents/projects/TOF_scanner/firmware/build/elf2uf2
 	cd /home/dmytro/Documents/projects/TOF_scanner/firmware/build/elf2uf2 && /usr/bin/cmake -E touch /home/dmytro/Documents/projects/TOF_scanner/firmware/build/elf2uf2/src/ELF2UF2Build-stamp/ELF2UF2Build-configure
 
 elf2uf2/src/ELF2UF2Build-stamp/ELF2UF2Build-download: elf2uf2/src/ELF2UF2Build-stamp/ELF2UF2Build-source_dirinfo.txt

@@ -70,7 +70,7 @@ CMakeFiles/slower_boot2_padded_checksummed_asm: slower_boot2_padded_checksummed.
 
 slower_boot2_padded_checksummed.S: slower_boot2.bin
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/dmytro/Documents/projects/TOF_scanner/firmware/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Generating slower_boot2_padded_checksummed.S"
-	/usr/bin/python3 /home/dmytro/Documents/pico/pico-sdk/src/rp2_common/boot_stage2/pad_checksum -s 0xffffffff /home/dmytro/Documents/projects/TOF_scanner/firmware/build/slower_boot2.bin /home/dmytro/Documents/projects/TOF_scanner/firmware/build/slower_boot2_padded_checksummed.S
+	/usr/bin/python3 /home/dmytro/pico/pico/pico-sdk/src/rp2_common/boot_stage2/pad_checksum -s 0xffffffff /home/dmytro/Documents/projects/TOF_scanner/firmware/build/slower_boot2.bin /home/dmytro/Documents/projects/TOF_scanner/firmware/build/slower_boot2_padded_checksummed.S
 
 slower_boot2.bin: slower_boot2.elf
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/dmytro/Documents/projects/TOF_scanner/firmware/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Generating slower_boot2.bin"

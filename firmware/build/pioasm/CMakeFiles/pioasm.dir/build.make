@@ -53,7 +53,7 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/dmytro/Documents/pico/pico-sdk/tools/pioasm
+CMAKE_SOURCE_DIR = /home/dmytro/pico/pico/pico-sdk/tools/pioasm
 
 # The top-level build directory on which CMake was run.
 CMAKE_BINARY_DIR = /home/dmytro/Documents/projects/TOF_scanner/firmware/build/pioasm
@@ -70,130 +70,130 @@ include CMakeFiles/pioasm.dir/progress.make
 include CMakeFiles/pioasm.dir/flags.make
 
 CMakeFiles/pioasm.dir/main.cpp.o: CMakeFiles/pioasm.dir/flags.make
-CMakeFiles/pioasm.dir/main.cpp.o: /home/dmytro/Documents/pico/pico-sdk/tools/pioasm/main.cpp
+CMakeFiles/pioasm.dir/main.cpp.o: /home/dmytro/pico/pico/pico-sdk/tools/pioasm/main.cpp
 CMakeFiles/pioasm.dir/main.cpp.o: CMakeFiles/pioasm.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/dmytro/Documents/projects/TOF_scanner/firmware/build/pioasm/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/pioasm.dir/main.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/pioasm.dir/main.cpp.o -MF CMakeFiles/pioasm.dir/main.cpp.o.d -o CMakeFiles/pioasm.dir/main.cpp.o -c /home/dmytro/Documents/pico/pico-sdk/tools/pioasm/main.cpp
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/pioasm.dir/main.cpp.o -MF CMakeFiles/pioasm.dir/main.cpp.o.d -o CMakeFiles/pioasm.dir/main.cpp.o -c /home/dmytro/pico/pico/pico-sdk/tools/pioasm/main.cpp
 
 CMakeFiles/pioasm.dir/main.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/pioasm.dir/main.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/dmytro/Documents/pico/pico-sdk/tools/pioasm/main.cpp > CMakeFiles/pioasm.dir/main.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/dmytro/pico/pico/pico-sdk/tools/pioasm/main.cpp > CMakeFiles/pioasm.dir/main.cpp.i
 
 CMakeFiles/pioasm.dir/main.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/pioasm.dir/main.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/dmytro/Documents/pico/pico-sdk/tools/pioasm/main.cpp -o CMakeFiles/pioasm.dir/main.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/dmytro/pico/pico/pico-sdk/tools/pioasm/main.cpp -o CMakeFiles/pioasm.dir/main.cpp.s
 
 CMakeFiles/pioasm.dir/pio_assembler.cpp.o: CMakeFiles/pioasm.dir/flags.make
-CMakeFiles/pioasm.dir/pio_assembler.cpp.o: /home/dmytro/Documents/pico/pico-sdk/tools/pioasm/pio_assembler.cpp
+CMakeFiles/pioasm.dir/pio_assembler.cpp.o: /home/dmytro/pico/pico/pico-sdk/tools/pioasm/pio_assembler.cpp
 CMakeFiles/pioasm.dir/pio_assembler.cpp.o: CMakeFiles/pioasm.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/dmytro/Documents/projects/TOF_scanner/firmware/build/pioasm/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/pioasm.dir/pio_assembler.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/pioasm.dir/pio_assembler.cpp.o -MF CMakeFiles/pioasm.dir/pio_assembler.cpp.o.d -o CMakeFiles/pioasm.dir/pio_assembler.cpp.o -c /home/dmytro/Documents/pico/pico-sdk/tools/pioasm/pio_assembler.cpp
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/pioasm.dir/pio_assembler.cpp.o -MF CMakeFiles/pioasm.dir/pio_assembler.cpp.o.d -o CMakeFiles/pioasm.dir/pio_assembler.cpp.o -c /home/dmytro/pico/pico/pico-sdk/tools/pioasm/pio_assembler.cpp
 
 CMakeFiles/pioasm.dir/pio_assembler.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/pioasm.dir/pio_assembler.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/dmytro/Documents/pico/pico-sdk/tools/pioasm/pio_assembler.cpp > CMakeFiles/pioasm.dir/pio_assembler.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/dmytro/pico/pico/pico-sdk/tools/pioasm/pio_assembler.cpp > CMakeFiles/pioasm.dir/pio_assembler.cpp.i
 
 CMakeFiles/pioasm.dir/pio_assembler.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/pioasm.dir/pio_assembler.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/dmytro/Documents/pico/pico-sdk/tools/pioasm/pio_assembler.cpp -o CMakeFiles/pioasm.dir/pio_assembler.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/dmytro/pico/pico/pico-sdk/tools/pioasm/pio_assembler.cpp -o CMakeFiles/pioasm.dir/pio_assembler.cpp.s
 
 CMakeFiles/pioasm.dir/pio_disassembler.cpp.o: CMakeFiles/pioasm.dir/flags.make
-CMakeFiles/pioasm.dir/pio_disassembler.cpp.o: /home/dmytro/Documents/pico/pico-sdk/tools/pioasm/pio_disassembler.cpp
+CMakeFiles/pioasm.dir/pio_disassembler.cpp.o: /home/dmytro/pico/pico/pico-sdk/tools/pioasm/pio_disassembler.cpp
 CMakeFiles/pioasm.dir/pio_disassembler.cpp.o: CMakeFiles/pioasm.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/dmytro/Documents/projects/TOF_scanner/firmware/build/pioasm/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/pioasm.dir/pio_disassembler.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/pioasm.dir/pio_disassembler.cpp.o -MF CMakeFiles/pioasm.dir/pio_disassembler.cpp.o.d -o CMakeFiles/pioasm.dir/pio_disassembler.cpp.o -c /home/dmytro/Documents/pico/pico-sdk/tools/pioasm/pio_disassembler.cpp
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/pioasm.dir/pio_disassembler.cpp.o -MF CMakeFiles/pioasm.dir/pio_disassembler.cpp.o.d -o CMakeFiles/pioasm.dir/pio_disassembler.cpp.o -c /home/dmytro/pico/pico/pico-sdk/tools/pioasm/pio_disassembler.cpp
 
 CMakeFiles/pioasm.dir/pio_disassembler.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/pioasm.dir/pio_disassembler.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/dmytro/Documents/pico/pico-sdk/tools/pioasm/pio_disassembler.cpp > CMakeFiles/pioasm.dir/pio_disassembler.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/dmytro/pico/pico/pico-sdk/tools/pioasm/pio_disassembler.cpp > CMakeFiles/pioasm.dir/pio_disassembler.cpp.i
 
 CMakeFiles/pioasm.dir/pio_disassembler.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/pioasm.dir/pio_disassembler.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/dmytro/Documents/pico/pico-sdk/tools/pioasm/pio_disassembler.cpp -o CMakeFiles/pioasm.dir/pio_disassembler.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/dmytro/pico/pico/pico-sdk/tools/pioasm/pio_disassembler.cpp -o CMakeFiles/pioasm.dir/pio_disassembler.cpp.s
 
 CMakeFiles/pioasm.dir/gen/lexer.cpp.o: CMakeFiles/pioasm.dir/flags.make
-CMakeFiles/pioasm.dir/gen/lexer.cpp.o: /home/dmytro/Documents/pico/pico-sdk/tools/pioasm/gen/lexer.cpp
+CMakeFiles/pioasm.dir/gen/lexer.cpp.o: /home/dmytro/pico/pico/pico-sdk/tools/pioasm/gen/lexer.cpp
 CMakeFiles/pioasm.dir/gen/lexer.cpp.o: CMakeFiles/pioasm.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/dmytro/Documents/projects/TOF_scanner/firmware/build/pioasm/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/pioasm.dir/gen/lexer.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/pioasm.dir/gen/lexer.cpp.o -MF CMakeFiles/pioasm.dir/gen/lexer.cpp.o.d -o CMakeFiles/pioasm.dir/gen/lexer.cpp.o -c /home/dmytro/Documents/pico/pico-sdk/tools/pioasm/gen/lexer.cpp
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/pioasm.dir/gen/lexer.cpp.o -MF CMakeFiles/pioasm.dir/gen/lexer.cpp.o.d -o CMakeFiles/pioasm.dir/gen/lexer.cpp.o -c /home/dmytro/pico/pico/pico-sdk/tools/pioasm/gen/lexer.cpp
 
 CMakeFiles/pioasm.dir/gen/lexer.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/pioasm.dir/gen/lexer.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/dmytro/Documents/pico/pico-sdk/tools/pioasm/gen/lexer.cpp > CMakeFiles/pioasm.dir/gen/lexer.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/dmytro/pico/pico/pico-sdk/tools/pioasm/gen/lexer.cpp > CMakeFiles/pioasm.dir/gen/lexer.cpp.i
 
 CMakeFiles/pioasm.dir/gen/lexer.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/pioasm.dir/gen/lexer.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/dmytro/Documents/pico/pico-sdk/tools/pioasm/gen/lexer.cpp -o CMakeFiles/pioasm.dir/gen/lexer.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/dmytro/pico/pico/pico-sdk/tools/pioasm/gen/lexer.cpp -o CMakeFiles/pioasm.dir/gen/lexer.cpp.s
 
 CMakeFiles/pioasm.dir/gen/parser.cpp.o: CMakeFiles/pioasm.dir/flags.make
-CMakeFiles/pioasm.dir/gen/parser.cpp.o: /home/dmytro/Documents/pico/pico-sdk/tools/pioasm/gen/parser.cpp
+CMakeFiles/pioasm.dir/gen/parser.cpp.o: /home/dmytro/pico/pico/pico-sdk/tools/pioasm/gen/parser.cpp
 CMakeFiles/pioasm.dir/gen/parser.cpp.o: CMakeFiles/pioasm.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/dmytro/Documents/projects/TOF_scanner/firmware/build/pioasm/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/pioasm.dir/gen/parser.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/pioasm.dir/gen/parser.cpp.o -MF CMakeFiles/pioasm.dir/gen/parser.cpp.o.d -o CMakeFiles/pioasm.dir/gen/parser.cpp.o -c /home/dmytro/Documents/pico/pico-sdk/tools/pioasm/gen/parser.cpp
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/pioasm.dir/gen/parser.cpp.o -MF CMakeFiles/pioasm.dir/gen/parser.cpp.o.d -o CMakeFiles/pioasm.dir/gen/parser.cpp.o -c /home/dmytro/pico/pico/pico-sdk/tools/pioasm/gen/parser.cpp
 
 CMakeFiles/pioasm.dir/gen/parser.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/pioasm.dir/gen/parser.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/dmytro/Documents/pico/pico-sdk/tools/pioasm/gen/parser.cpp > CMakeFiles/pioasm.dir/gen/parser.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/dmytro/pico/pico/pico-sdk/tools/pioasm/gen/parser.cpp > CMakeFiles/pioasm.dir/gen/parser.cpp.i
 
 CMakeFiles/pioasm.dir/gen/parser.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/pioasm.dir/gen/parser.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/dmytro/Documents/pico/pico-sdk/tools/pioasm/gen/parser.cpp -o CMakeFiles/pioasm.dir/gen/parser.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/dmytro/pico/pico/pico-sdk/tools/pioasm/gen/parser.cpp -o CMakeFiles/pioasm.dir/gen/parser.cpp.s
 
 CMakeFiles/pioasm.dir/c_sdk_output.cpp.o: CMakeFiles/pioasm.dir/flags.make
-CMakeFiles/pioasm.dir/c_sdk_output.cpp.o: /home/dmytro/Documents/pico/pico-sdk/tools/pioasm/c_sdk_output.cpp
+CMakeFiles/pioasm.dir/c_sdk_output.cpp.o: /home/dmytro/pico/pico/pico-sdk/tools/pioasm/c_sdk_output.cpp
 CMakeFiles/pioasm.dir/c_sdk_output.cpp.o: CMakeFiles/pioasm.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/dmytro/Documents/projects/TOF_scanner/firmware/build/pioasm/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/pioasm.dir/c_sdk_output.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/pioasm.dir/c_sdk_output.cpp.o -MF CMakeFiles/pioasm.dir/c_sdk_output.cpp.o.d -o CMakeFiles/pioasm.dir/c_sdk_output.cpp.o -c /home/dmytro/Documents/pico/pico-sdk/tools/pioasm/c_sdk_output.cpp
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/pioasm.dir/c_sdk_output.cpp.o -MF CMakeFiles/pioasm.dir/c_sdk_output.cpp.o.d -o CMakeFiles/pioasm.dir/c_sdk_output.cpp.o -c /home/dmytro/pico/pico/pico-sdk/tools/pioasm/c_sdk_output.cpp
 
 CMakeFiles/pioasm.dir/c_sdk_output.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/pioasm.dir/c_sdk_output.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/dmytro/Documents/pico/pico-sdk/tools/pioasm/c_sdk_output.cpp > CMakeFiles/pioasm.dir/c_sdk_output.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/dmytro/pico/pico/pico-sdk/tools/pioasm/c_sdk_output.cpp > CMakeFiles/pioasm.dir/c_sdk_output.cpp.i
 
 CMakeFiles/pioasm.dir/c_sdk_output.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/pioasm.dir/c_sdk_output.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/dmytro/Documents/pico/pico-sdk/tools/pioasm/c_sdk_output.cpp -o CMakeFiles/pioasm.dir/c_sdk_output.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/dmytro/pico/pico/pico-sdk/tools/pioasm/c_sdk_output.cpp -o CMakeFiles/pioasm.dir/c_sdk_output.cpp.s
 
 CMakeFiles/pioasm.dir/python_output.cpp.o: CMakeFiles/pioasm.dir/flags.make
-CMakeFiles/pioasm.dir/python_output.cpp.o: /home/dmytro/Documents/pico/pico-sdk/tools/pioasm/python_output.cpp
+CMakeFiles/pioasm.dir/python_output.cpp.o: /home/dmytro/pico/pico/pico-sdk/tools/pioasm/python_output.cpp
 CMakeFiles/pioasm.dir/python_output.cpp.o: CMakeFiles/pioasm.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/dmytro/Documents/projects/TOF_scanner/firmware/build/pioasm/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/pioasm.dir/python_output.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/pioasm.dir/python_output.cpp.o -MF CMakeFiles/pioasm.dir/python_output.cpp.o.d -o CMakeFiles/pioasm.dir/python_output.cpp.o -c /home/dmytro/Documents/pico/pico-sdk/tools/pioasm/python_output.cpp
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/pioasm.dir/python_output.cpp.o -MF CMakeFiles/pioasm.dir/python_output.cpp.o.d -o CMakeFiles/pioasm.dir/python_output.cpp.o -c /home/dmytro/pico/pico/pico-sdk/tools/pioasm/python_output.cpp
 
 CMakeFiles/pioasm.dir/python_output.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/pioasm.dir/python_output.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/dmytro/Documents/pico/pico-sdk/tools/pioasm/python_output.cpp > CMakeFiles/pioasm.dir/python_output.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/dmytro/pico/pico/pico-sdk/tools/pioasm/python_output.cpp > CMakeFiles/pioasm.dir/python_output.cpp.i
 
 CMakeFiles/pioasm.dir/python_output.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/pioasm.dir/python_output.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/dmytro/Documents/pico/pico-sdk/tools/pioasm/python_output.cpp -o CMakeFiles/pioasm.dir/python_output.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/dmytro/pico/pico/pico-sdk/tools/pioasm/python_output.cpp -o CMakeFiles/pioasm.dir/python_output.cpp.s
 
 CMakeFiles/pioasm.dir/hex_output.cpp.o: CMakeFiles/pioasm.dir/flags.make
-CMakeFiles/pioasm.dir/hex_output.cpp.o: /home/dmytro/Documents/pico/pico-sdk/tools/pioasm/hex_output.cpp
+CMakeFiles/pioasm.dir/hex_output.cpp.o: /home/dmytro/pico/pico/pico-sdk/tools/pioasm/hex_output.cpp
 CMakeFiles/pioasm.dir/hex_output.cpp.o: CMakeFiles/pioasm.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/dmytro/Documents/projects/TOF_scanner/firmware/build/pioasm/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/pioasm.dir/hex_output.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/pioasm.dir/hex_output.cpp.o -MF CMakeFiles/pioasm.dir/hex_output.cpp.o.d -o CMakeFiles/pioasm.dir/hex_output.cpp.o -c /home/dmytro/Documents/pico/pico-sdk/tools/pioasm/hex_output.cpp
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/pioasm.dir/hex_output.cpp.o -MF CMakeFiles/pioasm.dir/hex_output.cpp.o.d -o CMakeFiles/pioasm.dir/hex_output.cpp.o -c /home/dmytro/pico/pico/pico-sdk/tools/pioasm/hex_output.cpp
 
 CMakeFiles/pioasm.dir/hex_output.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/pioasm.dir/hex_output.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/dmytro/Documents/pico/pico-sdk/tools/pioasm/hex_output.cpp > CMakeFiles/pioasm.dir/hex_output.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/dmytro/pico/pico/pico-sdk/tools/pioasm/hex_output.cpp > CMakeFiles/pioasm.dir/hex_output.cpp.i
 
 CMakeFiles/pioasm.dir/hex_output.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/pioasm.dir/hex_output.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/dmytro/Documents/pico/pico-sdk/tools/pioasm/hex_output.cpp -o CMakeFiles/pioasm.dir/hex_output.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/dmytro/pico/pico/pico-sdk/tools/pioasm/hex_output.cpp -o CMakeFiles/pioasm.dir/hex_output.cpp.s
 
 CMakeFiles/pioasm.dir/ada_output.cpp.o: CMakeFiles/pioasm.dir/flags.make
-CMakeFiles/pioasm.dir/ada_output.cpp.o: /home/dmytro/Documents/pico/pico-sdk/tools/pioasm/ada_output.cpp
+CMakeFiles/pioasm.dir/ada_output.cpp.o: /home/dmytro/pico/pico/pico-sdk/tools/pioasm/ada_output.cpp
 CMakeFiles/pioasm.dir/ada_output.cpp.o: CMakeFiles/pioasm.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/dmytro/Documents/projects/TOF_scanner/firmware/build/pioasm/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/pioasm.dir/ada_output.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/pioasm.dir/ada_output.cpp.o -MF CMakeFiles/pioasm.dir/ada_output.cpp.o.d -o CMakeFiles/pioasm.dir/ada_output.cpp.o -c /home/dmytro/Documents/pico/pico-sdk/tools/pioasm/ada_output.cpp
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/pioasm.dir/ada_output.cpp.o -MF CMakeFiles/pioasm.dir/ada_output.cpp.o.d -o CMakeFiles/pioasm.dir/ada_output.cpp.o -c /home/dmytro/pico/pico/pico-sdk/tools/pioasm/ada_output.cpp
 
 CMakeFiles/pioasm.dir/ada_output.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/pioasm.dir/ada_output.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/dmytro/Documents/pico/pico-sdk/tools/pioasm/ada_output.cpp > CMakeFiles/pioasm.dir/ada_output.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/dmytro/pico/pico/pico-sdk/tools/pioasm/ada_output.cpp > CMakeFiles/pioasm.dir/ada_output.cpp.i
 
 CMakeFiles/pioasm.dir/ada_output.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/pioasm.dir/ada_output.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/dmytro/Documents/pico/pico-sdk/tools/pioasm/ada_output.cpp -o CMakeFiles/pioasm.dir/ada_output.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/dmytro/pico/pico/pico-sdk/tools/pioasm/ada_output.cpp -o CMakeFiles/pioasm.dir/ada_output.cpp.s
 
 # Object files for target pioasm
 pioasm_OBJECTS = \
@@ -233,6 +233,6 @@ CMakeFiles/pioasm.dir/clean:
 .PHONY : CMakeFiles/pioasm.dir/clean
 
 CMakeFiles/pioasm.dir/depend:
-	cd /home/dmytro/Documents/projects/TOF_scanner/firmware/build/pioasm && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/dmytro/Documents/pico/pico-sdk/tools/pioasm /home/dmytro/Documents/pico/pico-sdk/tools/pioasm /home/dmytro/Documents/projects/TOF_scanner/firmware/build/pioasm /home/dmytro/Documents/projects/TOF_scanner/firmware/build/pioasm /home/dmytro/Documents/projects/TOF_scanner/firmware/build/pioasm/CMakeFiles/pioasm.dir/DependInfo.cmake "--color=$(COLOR)"
+	cd /home/dmytro/Documents/projects/TOF_scanner/firmware/build/pioasm && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/dmytro/pico/pico/pico-sdk/tools/pioasm /home/dmytro/pico/pico/pico-sdk/tools/pioasm /home/dmytro/Documents/projects/TOF_scanner/firmware/build/pioasm /home/dmytro/Documents/projects/TOF_scanner/firmware/build/pioasm /home/dmytro/Documents/projects/TOF_scanner/firmware/build/pioasm/CMakeFiles/pioasm.dir/DependInfo.cmake "--color=$(COLOR)"
 .PHONY : CMakeFiles/pioasm.dir/depend
 

@@ -1,4 +1,4 @@
-# Install script for directory: /home/dmytro/Documents/pico/pico-sdk/src/rp2_common/pico_stdio_semihosting
+# Install script for directory: /home/dmytro/pico/pico/pico-sdk/src/rp2_common/pico_stdio_semihosting
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

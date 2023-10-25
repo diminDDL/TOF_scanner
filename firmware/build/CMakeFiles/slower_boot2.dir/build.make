@@ -69,29 +69,29 @@ include CMakeFiles/slower_boot2.dir/progress.make
 # Include the compile flags for this target's objects.
 include CMakeFiles/slower_boot2.dir/flags.make
 
-CMakeFiles/slower_boot2.dir/home/dmytro/Documents/pico/pico-sdk/src/rp2_common/boot_stage2/compile_time_choice.S.obj: CMakeFiles/slower_boot2.dir/flags.make
-CMakeFiles/slower_boot2.dir/home/dmytro/Documents/pico/pico-sdk/src/rp2_common/boot_stage2/compile_time_choice.S.obj: /home/dmytro/Documents/pico/pico-sdk/src/rp2_common/boot_stage2/compile_time_choice.S
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/dmytro/Documents/projects/TOF_scanner/firmware/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building ASM object CMakeFiles/slower_boot2.dir/home/dmytro/Documents/pico/pico-sdk/src/rp2_common/boot_stage2/compile_time_choice.S.obj"
-	/usr/bin/arm-none-eabi-gcc $(ASM_DEFINES) $(ASM_INCLUDES) $(ASM_FLAGS) -o CMakeFiles/slower_boot2.dir/home/dmytro/Documents/pico/pico-sdk/src/rp2_common/boot_stage2/compile_time_choice.S.obj   -c /home/dmytro/Documents/pico/pico-sdk/src/rp2_common/boot_stage2/compile_time_choice.S
+CMakeFiles/slower_boot2.dir/home/dmytro/pico/pico/pico-sdk/src/rp2_common/boot_stage2/compile_time_choice.S.obj: CMakeFiles/slower_boot2.dir/flags.make
+CMakeFiles/slower_boot2.dir/home/dmytro/pico/pico/pico-sdk/src/rp2_common/boot_stage2/compile_time_choice.S.obj: /home/dmytro/pico/pico/pico-sdk/src/rp2_common/boot_stage2/compile_time_choice.S
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/dmytro/Documents/projects/TOF_scanner/firmware/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building ASM object CMakeFiles/slower_boot2.dir/home/dmytro/pico/pico/pico-sdk/src/rp2_common/boot_stage2/compile_time_choice.S.obj"
+	/usr/bin/arm-none-eabi-gcc $(ASM_DEFINES) $(ASM_INCLUDES) $(ASM_FLAGS) -o CMakeFiles/slower_boot2.dir/home/dmytro/pico/pico/pico-sdk/src/rp2_common/boot_stage2/compile_time_choice.S.obj   -c /home/dmytro/pico/pico/pico-sdk/src/rp2_common/boot_stage2/compile_time_choice.S
 
-CMakeFiles/slower_boot2.dir/home/dmytro/Documents/pico/pico-sdk/src/rp2_common/boot_stage2/compile_time_choice.S.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing ASM source to CMakeFiles/slower_boot2.dir/home/dmytro/Documents/pico/pico-sdk/src/rp2_common/boot_stage2/compile_time_choice.S.i"
-	/usr/bin/arm-none-eabi-gcc $(ASM_DEFINES) $(ASM_INCLUDES) $(ASM_FLAGS) -E /home/dmytro/Documents/pico/pico-sdk/src/rp2_common/boot_stage2/compile_time_choice.S > CMakeFiles/slower_boot2.dir/home/dmytro/Documents/pico/pico-sdk/src/rp2_common/boot_stage2/compile_time_choice.S.i
+CMakeFiles/slower_boot2.dir/home/dmytro/pico/pico/pico-sdk/src/rp2_common/boot_stage2/compile_time_choice.S.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing ASM source to CMakeFiles/slower_boot2.dir/home/dmytro/pico/pico/pico-sdk/src/rp2_common/boot_stage2/compile_time_choice.S.i"
+	/usr/bin/arm-none-eabi-gcc $(ASM_DEFINES) $(ASM_INCLUDES) $(ASM_FLAGS) -E /home/dmytro/pico/pico/pico-sdk/src/rp2_common/boot_stage2/compile_time_choice.S > CMakeFiles/slower_boot2.dir/home/dmytro/pico/pico/pico-sdk/src/rp2_common/boot_stage2/compile_time_choice.S.i
 
-CMakeFiles/slower_boot2.dir/home/dmytro/Documents/pico/pico-sdk/src/rp2_common/boot_stage2/compile_time_choice.S.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling ASM source to assembly CMakeFiles/slower_boot2.dir/home/dmytro/Documents/pico/pico-sdk/src/rp2_common/boot_stage2/compile_time_choice.S.s"
-	/usr/bin/arm-none-eabi-gcc $(ASM_DEFINES) $(ASM_INCLUDES) $(ASM_FLAGS) -S /home/dmytro/Documents/pico/pico-sdk/src/rp2_common/boot_stage2/compile_time_choice.S -o CMakeFiles/slower_boot2.dir/home/dmytro/Documents/pico/pico-sdk/src/rp2_common/boot_stage2/compile_time_choice.S.s
+CMakeFiles/slower_boot2.dir/home/dmytro/pico/pico/pico-sdk/src/rp2_common/boot_stage2/compile_time_choice.S.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling ASM source to assembly CMakeFiles/slower_boot2.dir/home/dmytro/pico/pico/pico-sdk/src/rp2_common/boot_stage2/compile_time_choice.S.s"
+	/usr/bin/arm-none-eabi-gcc $(ASM_DEFINES) $(ASM_INCLUDES) $(ASM_FLAGS) -S /home/dmytro/pico/pico/pico-sdk/src/rp2_common/boot_stage2/compile_time_choice.S -o CMakeFiles/slower_boot2.dir/home/dmytro/pico/pico/pico-sdk/src/rp2_common/boot_stage2/compile_time_choice.S.s
 
 # Object files for target slower_boot2
 slower_boot2_OBJECTS = \
-"CMakeFiles/slower_boot2.dir/home/dmytro/Documents/pico/pico-sdk/src/rp2_common/boot_stage2/compile_time_choice.S.obj"
+"CMakeFiles/slower_boot2.dir/home/dmytro/pico/pico/pico-sdk/src/rp2_common/boot_stage2/compile_time_choice.S.obj"
 
 # External object files for target slower_boot2
 slower_boot2_EXTERNAL_OBJECTS =
 
-slower_boot2.elf: CMakeFiles/slower_boot2.dir/home/dmytro/Documents/pico/pico-sdk/src/rp2_common/boot_stage2/compile_time_choice.S.obj
+slower_boot2.elf: CMakeFiles/slower_boot2.dir/home/dmytro/pico/pico/pico-sdk/src/rp2_common/boot_stage2/compile_time_choice.S.obj
 slower_boot2.elf: CMakeFiles/slower_boot2.dir/build.make
-slower_boot2.elf: /home/dmytro/Documents/pico/pico-sdk/src/rp2_common/boot_stage2/boot_stage2.ld
+slower_boot2.elf: /home/dmytro/pico/pico/pico-sdk/src/rp2_common/boot_stage2/boot_stage2.ld
 slower_boot2.elf: CMakeFiles/slower_boot2.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/dmytro/Documents/projects/TOF_scanner/firmware/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking ASM executable slower_boot2.elf"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/slower_boot2.dir/link.txt --verbose=$(VERBOSE)

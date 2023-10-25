@@ -12,8 +12,6 @@ const uint scl_pin = 13;
 
 const uint8_t tof_addr = 0x57;
 
-#include <stdint.h>
-
 struct TOFConfig {
     uint8_t integ_per[2];
     uint8_t samp_per[2];
@@ -63,7 +61,7 @@ int main() {
     gpio_set_dir(led_pin, GPIO_OUT);
     gpio_put(led_pin, 1); 
 
-    i2c_init(i2c_default, 100 * 1000);
+    i2c_init(i2c0, 100 * 1000);
     gpio_set_function(sda_pin, GPIO_FUNC_I2C);
     gpio_set_function(scl_pin, GPIO_FUNC_I2C);
     gpio_pull_up(sda_pin);
@@ -76,7 +74,7 @@ int main() {
     for (int i = 0; i < sizeof(tof_config); i += 2) {
         buf[0] = ((uint8_t*)&tof_config)[i];
         buf[1] = ((uint8_t*)&tof_config)[i + 1];
-        i2c_write_blocking(i2c_default, tof_addr, buf, 2, false);
+        i2c_write_blocking(i2c0, tof_addr, buf, 2, false);
         // printf("wrote %02x %02x\n", buf[0], buf[1]);
     }
 

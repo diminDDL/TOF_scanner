@@ -1,4 +1,4 @@
-# Install script for directory: /home/dmytro/Documents/pico/pico-sdk/src/common/pico_usb_reset_interface
+# Install script for directory: /home/dmytro/pico/pico/pico-sdk/src/common/pico_usb_reset_interface
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

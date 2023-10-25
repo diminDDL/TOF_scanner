@@ -70,7 +70,7 @@ pico-sdk/src/rp2_common/boot_stage2/CMakeFiles/bs2_default_padded_checksummed_as
 
 pico-sdk/src/rp2_common/boot_stage2/bs2_default_padded_checksummed.S: pico-sdk/src/rp2_common/boot_stage2/bs2_default.bin
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/dmytro/Documents/projects/TOF_scanner/firmware/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Generating bs2_default_padded_checksummed.S"
-	cd /home/dmytro/Documents/projects/TOF_scanner/firmware/build/pico-sdk/src/rp2_common/boot_stage2 && /usr/bin/python3 /home/dmytro/Documents/pico/pico-sdk/src/rp2_common/boot_stage2/pad_checksum -s 0xffffffff /home/dmytro/Documents/projects/TOF_scanner/firmware/build/pico-sdk/src/rp2_common/boot_stage2/bs2_default.bin /home/dmytro/Documents/projects/TOF_scanner/firmware/build/pico-sdk/src/rp2_common/boot_stage2/bs2_default_padded_checksummed.S
+	cd /home/dmytro/Documents/projects/TOF_scanner/firmware/build/pico-sdk/src/rp2_common/boot_stage2 && /usr/bin/python3 /home/dmytro/pico/pico/pico-sdk/src/rp2_common/boot_stage2/pad_checksum -s 0xffffffff /home/dmytro/Documents/projects/TOF_scanner/firmware/build/pico-sdk/src/rp2_common/boot_stage2/bs2_default.bin /home/dmytro/Documents/projects/TOF_scanner/firmware/build/pico-sdk/src/rp2_common/boot_stage2/bs2_default_padded_checksummed.S
 
 pico-sdk/src/rp2_common/boot_stage2/bs2_default.bin: pico-sdk/src/rp2_common/boot_stage2/bs2_default.elf
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/dmytro/Documents/projects/TOF_scanner/firmware/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Generating bs2_default.bin"
@@ -91,6 +91,6 @@ pico-sdk/src/rp2_common/boot_stage2/CMakeFiles/bs2_default_padded_checksummed_as
 .PHONY : pico-sdk/src/rp2_common/boot_stage2/CMakeFiles/bs2_default_padded_checksummed_asm.dir/clean
 
 pico-sdk/src/rp2_common/boot_stage2/CMakeFiles/bs2_default_padded_checksummed_asm.dir/depend:
-	cd /home/dmytro/Documents/projects/TOF_scanner/firmware/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/dmytro/Documents/projects/TOF_scanner/firmware /home/dmytro/Documents/pico/pico-sdk/src/rp2_common/boot_stage2 /home/dmytro/Documents/projects/TOF_scanner/firmware/build /home/dmytro/Documents/projects/TOF_scanner/firmware/build/pico-sdk/src/rp2_common/boot_stage2 /home/dmytro/Documents/projects/TOF_scanner/firmware/build/pico-sdk/src/rp2_common/boot_stage2/CMakeFiles/bs2_default_padded_checksummed_asm.dir/DependInfo.cmake "--color=$(COLOR)"
+	cd /home/dmytro/Documents/projects/TOF_scanner/firmware/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/dmytro/Documents/projects/TOF_scanner/firmware /home/dmytro/pico/pico/pico-sdk/src/rp2_common/boot_stage2 /home/dmytro/Documents/projects/TOF_scanner/firmware/build /home/dmytro/Documents/projects/TOF_scanner/firmware/build/pico-sdk/src/rp2_common/boot_stage2 /home/dmytro/Documents/projects/TOF_scanner/firmware/build/pico-sdk/src/rp2_common/boot_stage2/CMakeFiles/bs2_default_padded_checksummed_asm.dir/DependInfo.cmake "--color=$(COLOR)"
 .PHONY : pico-sdk/src/rp2_common/boot_stage2/CMakeFiles/bs2_default_padded_checksummed_asm.dir/depend
 

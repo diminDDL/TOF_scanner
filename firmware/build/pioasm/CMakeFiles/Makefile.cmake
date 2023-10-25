@@ -7,9 +7,9 @@ set(CMAKE_DEPENDS_GENERATOR "Unix Makefiles")
 # The top level Makefile was generated from the following files:
 set(CMAKE_MAKEFILE_DEPENDS
   "CMakeCache.txt"
-  "/home/dmytro/Documents/pico/pico-sdk/tools/pioasm/CMakeLists.txt"
   "CMakeFiles/3.27.5/CMakeCXXCompiler.cmake"
   "CMakeFiles/3.27.5/CMakeSystem.cmake"
+  "/home/dmytro/pico/pico/pico-sdk/tools/pioasm/CMakeLists.txt"
   "/usr/share/cmake-3.27/Modules/CMakeCXXCompiler.cmake.in"
   "/usr/share/cmake-3.27/Modules/CMakeCXXCompilerABI.cpp"
   "/usr/share/cmake-3.27/Modules/CMakeCXXInformation.cmake"

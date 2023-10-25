@@ -86,6 +86,6 @@ pico-sdk/src/rp2_common/boot_stage2/CMakeFiles/bs2_default_bin.dir/clean:
 .PHONY : pico-sdk/src/rp2_common/boot_stage2/CMakeFiles/bs2_default_bin.dir/clean
 
 pico-sdk/src/rp2_common/boot_stage2/CMakeFiles/bs2_default_bin.dir/depend:
-	cd /home/dmytro/Documents/projects/TOF_scanner/firmware/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/dmytro/Documents/projects/TOF_scanner/firmware /home/dmytro/Documents/pico/pico-sdk/src/rp2_common/boot_stage2 /home/dmytro/Documents/projects/TOF_scanner/firmware/build /home/dmytro/Documents/projects/TOF_scanner/firmware/build/pico-sdk/src/rp2_common/boot_stage2 /home/dmytro/Documents/projects/TOF_scanner/firmware/build/pico-sdk/src/rp2_common/boot_stage2/CMakeFiles/bs2_default_bin.dir/DependInfo.cmake "--color=$(COLOR)"
+	cd /home/dmytro/Documents/projects/TOF_scanner/firmware/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/dmytro/Documents/projects/TOF_scanner/firmware /home/dmytro/pico/pico/pico-sdk/src/rp2_common/boot_stage2 /home/dmytro/Documents/projects/TOF_scanner/firmware/build /home/dmytro/Documents/projects/TOF_scanner/firmware/build/pico-sdk/src/rp2_common/boot_stage2 /home/dmytro/Documents/projects/TOF_scanner/firmware/build/pico-sdk/src/rp2_common/boot_stage2/CMakeFiles/bs2_default_bin.dir/DependInfo.cmake "--color=$(COLOR)"
 .PHONY : pico-sdk/src/rp2_common/boot_stage2/CMakeFiles/bs2_default_bin.dir/depend
 

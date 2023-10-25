@@ -1,4 +1,4 @@
-# Install script for directory: /home/dmytro/Documents/pico/pico-sdk/src/rp2_common/hardware_resets
+# Install script for directory: /home/dmytro/pico/pico/pico-sdk/src/rp2_common/hardware_resets
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

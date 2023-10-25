@@ -18,14 +18,6 @@ add_executable(${PROJECT_NAME}
     main.cpp
 )
 
-AUX_SOURCE_DIRECTORY(lib SUB_SOURCES)
-
-target_sources(
-    ${PROJECT_NAME}
-    PUBLIC
-    ${SUB_SOURCES}
-)
-
 # set SPI clock slower than CPU clock so that it works
 pico_define_boot_stage2(slower_boot2 ${PICO_DEFAULT_BOOT_STAGE2_FILE})
 target_compile_definitions(slower_boot2 PRIVATE PICO_FLASH_SPI_CLKDIV=4)

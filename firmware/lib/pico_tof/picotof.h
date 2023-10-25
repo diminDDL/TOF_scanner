@@ -2,20 +2,11 @@
 #define PICO_TOF_H
 
 #include "pico/stdlib.h"
+#include "eeprom.h"
 
-const uint8_t eeprom_addr = 0x50;
 const uint8_t isl29501_addr = 0x57;
-
-
-const uint8_t eeprom_serialnum = 0;					// S/N base address 0x00
-const uint8_t eeprom_user_cal = 16;					// user calibration base address 0x10
-const uint8_t eeprom_fact_cal = 32;					// factory calibration base address 0x20
-
-const uint8_t eeprom_magic = 0xEB;
-const uint8_t eeprom_serial_size = 12;
-const uint8_t eeprom_calibration_offset = 0x24;    // total of 13 calibration registers, 0x24 - 0x30
 												
-char szMsg[400];
+//char szMsg[400];
 
 /* ------------------------------------------------------------ */
 /*				ERROR Definitions							    */
@@ -75,7 +66,7 @@ typedef struct _CALIBDATA{    //
 
 typedef struct _SERIALNODATA{    //
     uint8_t magic;
-    char rgchSN[eeprom_serial_size];	// 12 chars string
+    char rgchSN[EEPROM_SERIAL_SIZE];	// 12 chars string
     uint8_t crc;
     uint8_t dummy[2];	// align to 16 bytes
 }  __attribute__((__packed__)) SERIALNODATA;

@@ -4,7 +4,7 @@
 cmake_minimum_required(VERSION 3.5)
 
 file(MAKE_DIRECTORY
-  "/home/dmytro/Documents/pico/pico-sdk/tools/elf2uf2"
+  "/home/dmytro/pico/pico/pico-sdk/tools/elf2uf2"
   "/home/dmytro/Documents/projects/TOF_scanner/firmware/build/elf2uf2"
   "/home/dmytro/Documents/projects/TOF_scanner/firmware/build/elf2uf2"
   "/home/dmytro/Documents/projects/TOF_scanner/firmware/build/elf2uf2/tmp"

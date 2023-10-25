@@ -54,7 +54,7 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/dmytro/Documents/pico/pico-sdk/tools/pioasm
+CMAKE_SOURCE_DIR = /home/dmytro/pico/pico/pico-sdk/tools/pioasm
 
 # The top-level build directory on which CMake was run.
 CMAKE_BINARY_DIR = /home/dmytro/Documents/projects/TOF_scanner/firmware/build/pioasm

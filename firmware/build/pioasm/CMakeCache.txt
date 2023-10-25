@@ -199,7 +199,7 @@ pioasm_BINARY_DIR:STATIC=/home/dmytro/Documents/projects/TOF_scanner/firmware/bu
 pioasm_IS_TOP_LEVEL:STATIC=ON
 
 //Value Computed by CMake
-pioasm_SOURCE_DIR:STATIC=/home/dmytro/Documents/pico/pico-sdk/tools/pioasm
+pioasm_SOURCE_DIR:STATIC=/home/dmytro/pico/pico/pico-sdk/tools/pioasm
 
 
 ########################
@@ -270,7 +270,7 @@ CMAKE_GENERATOR_PLATFORM:INTERNAL=
 CMAKE_GENERATOR_TOOLSET:INTERNAL=
 //Source directory with the top level CMakeLists.txt file for this
 // project
-CMAKE_HOME_DIRECTORY:INTERNAL=/home/dmytro/Documents/pico/pico-sdk/tools/pioasm
+CMAKE_HOME_DIRECTORY:INTERNAL=/home/dmytro/pico/pico/pico-sdk/tools/pioasm
 //Install .so files without execute permission.
 CMAKE_INSTALL_SO_NO_EXE:INTERNAL=1
 //ADVANCED property for variable: CMAKE_LINKER

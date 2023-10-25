@@ -1,5 +1,5 @@
 file(REMOVE_RECURSE
-  "CMakeFiles/slower_boot2.dir/home/dmytro/Documents/pico/pico-sdk/src/rp2_common/boot_stage2/compile_time_choice.S.obj"
+  "CMakeFiles/slower_boot2.dir/home/dmytro/pico/pico/pico-sdk/src/rp2_common/boot_stage2/compile_time_choice.S.obj"
   "slower_boot2.elf"
   "slower_boot2.pdb"
 )
