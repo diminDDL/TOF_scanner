@@ -39,6 +39,19 @@ bool reserved_addr(uint8_t addr) {
     return (addr & 0x78) == 0 || (addr & 0x78) == 0x78;
 }
 
+void test_read(i2c_inst_t *i2c, uint8_t device_addr) {
+    uint8_t data[16];
+    for(uint16_t addr = 0; addr < 512; addr += 16) {
+        EEPROM_PageRead(i2c, device_addr, addr, data, 16);
+        // Print or check the read data
+        printf("Address: %03X Data: ", addr);
+        for(int i = 0; i < 16; ++i) {
+            printf("%02X ", data[i]);
+        }
+        printf("\n");
+    }
+}
+
 int main() {
 
     stdio_init_all();
@@ -77,6 +90,8 @@ int main() {
             tight_loop_contents();
         }
     }
+
+    test_read(i2c0, eeprom_addr);
 
     // write the default values to the sensor
     // uint8_t buf[2];

@@ -57,52 +57,26 @@ uint8_t EEPROM_Write(i2c_inst_t *i2c, uint8_t device_addr, uint8_t mem_addr, uin
 
 
 uint8_t EEPROM_PageWrite(i2c_inst_t *i2c, uint8_t device_addr, uint16_t mem_addr, uint8_t* data, uint8_t size) {
-// TODO
+    // Get the EEPROM device address based on memory address
+    uint8_t new_device_address = EEPROM_get_device_address(device_addr, mem_addr);
+
+    // Write data to EEPROM
+    uint8_t result = EEPROM_Write(i2c, new_device_address, mem_addr & 0xFF, data, size);
+    return result;
 }
 
-/* ------------------------------------------------------------ */
-/***	EPROM_PageRead
-**
-**	Parameters:
-**		InstancePtr - EPROM object to initialize
-***		addr		- Address to send to
-**		Data		- Pointer to data buffer to send
-**		cntdata		- Number of data values to send
-**
-**	Return Value:
-** uint8_t result :
-**				ERRVAL_EPROM_READ	- failed to read EEPROM over I2C communication
-**				ERRVAL_SUCCESS		- success
-**	Description:
-**		Gets the EEPROM device address and reads cntdata data bytes from the consecutive registers 
-**		starting at the specified register address.
-*/
-// uint8_t EPROM_PageRead(EPROM* InstancePtr, u16 addr, uint8_t* data, uint8_t cntdata)
-// {
-// 	uint8_t result;
-// 	uint8_t epromDevAddr = EPROM_GetDevAddr(InstancePtr, (addr & 0x100)>>9);
-// 	XIic_SetAddress(&InstancePtr->EPROMIic, XII_ADDR_TO_SEND_TYPE, epromDevAddr);
-// 	result=EPROM_ReadIIC(InstancePtr, (addr & 0xFF), data, cntdata);
-// 	return result;
-// }
+uint8_t EEPROM_PageRead(i2c_inst_t *i2c, uint8_t device_addr, uint16_t mem_addr, uint8_t* data, uint8_t size) {
+    // Get the EEPROM device address based on memory address
+    uint8_t new_device_address = EEPROM_get_device_address(device_addr, mem_addr);
 
-/* ------------------------------------------------------------ */
-/***	EPROM_GetDevAddr
-**
-**	Parameters:
-**		InstancePtr - EPROM object to initialize
-***		a8			- the 9th-bit of the memory array word address
-**
-**	Return Value:
-**	uint8_t	devAddr     - EEPROM device address
-**
-**	Description:
-**		Returns the EEPROM device address.
-**
-*/
+    // Read data from EEPROM
+    uint8_t result = EEPROM_Read(i2c, new_device_address, mem_addr & 0xFF, data, size);
+
+    return result;
+}
+
 
 uint8_t EEPROM_get_device_address(uint8_t device_addr, uint16_t mem_addr) {
-    uint8_t wide_address = device_addr | (mem_addr & 0x01);
+    uint8_t wide_address = (device_addr & 0xFE) | ((mem_addr >> 7) & 0x01);
     return wide_address;
 }
-
