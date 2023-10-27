@@ -1,6 +1,6 @@
-#include "picotof.h"
+#include "picotof.hpp"
 #include "pico/stdlib.h"
-#include "eeprom.h"
+#include "eeprom.hpp"
 // #include <stdio.h>
 // #include "math.h"
 // // #include "EEPROM.h"

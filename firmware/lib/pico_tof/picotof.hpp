@@ -2,29 +2,11 @@
 #define PICO_TOF_H
 
 #include "pico/stdlib.h"
-#include "eeprom.h"
+#include "eeprom.hpp"
 
 const uint8_t isl29501_addr = 0x57;
 												
 //char szMsg[400];
-
-/* ------------------------------------------------------------ */
-/*				ERROR Definitions							    */
-/* ------------------------------------------------------------ */
-
-#define ERRVAL_SUCCESS                  0       // success
-
-#define ERRVAL_EPROM_WRITE              0xFA    // failed to write EPROM over I2C communication
-#define ERRVAL_EPROM_READ               0xF9    // failed to read EPROM over I2C communication
-#define ERRVAL_ToF_WRITE              	0xF8    // failed to write ISL29501 registers over I2C communication
-#define ERRVAL_ToF_READ              	0xF6    // failed to read ISL29501 registers over I2C communication
-
-#define ERRVAL_EPROM_CRC                0xFE    // wrong CRC when reading data from EPROM
-#define ERRVAL_EPROM_MAGICNO            0xFD    // wrong Magic No. when reading data from EPROM
-#define ERRVAL_FAILED_STARTING_CALIB    0xFC    // failed to start calibration, EEPROM or ISL29501 device is busy
-#define ERRVAL_INCORRECT_CALIB_DISTACE  0xED	// incorrect calibration distance; it has to be more than 5 cm(0.05 m)
-#define ERRVAL_FAILED_STARTING_MEASURE	0xEC	// failed to start measurement
-
 
 /* ------------------------------------------------------------ */
 /*		 Register addresses Definitions	for calibration			*/

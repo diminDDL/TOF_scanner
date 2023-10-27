@@ -5,7 +5,8 @@
 #include "hardware/clocks.h"
 #include "hardware/i2c.h"
 #include "pwm.pio.h"
-#include "lib/pico_tof/picotof.h"
+#include "lib/pico_tof/picotof.hpp"
+#include "lib/pico_tof/eeprom.hpp"
 
 const uint sda_pin = 12;
 const uint scl_pin = 13;
@@ -61,22 +62,30 @@ int main() {
     gpio_set_dir(led_pin, GPIO_OUT);
     gpio_put(led_pin, 1); 
 
-    i2c_init(i2c0, 100 * 1000);
+    // i2c_init(i2c0, 100 * 1000);
     gpio_set_function(sda_pin, GPIO_FUNC_I2C);
     gpio_set_function(scl_pin, GPIO_FUNC_I2C);
     gpio_pull_up(sda_pin);
     gpio_pull_up(scl_pin);
     
     sleep_ms(1000);
+    printf("configuring tof\n");
+    // try to intialize the eeporm 
+    if(!EEPROM_begin(i2c0, eeprom_addr)){
+        printf("Boy you fucked up I2C EEPROM no worky :(\n");
+        while(1){
+            tight_loop_contents();
+        }
+    }
 
     // write the default values to the sensor
-    uint8_t buf[2];
-    for (int i = 0; i < sizeof(tof_config); i += 2) {
-        buf[0] = ((uint8_t*)&tof_config)[i];
-        buf[1] = ((uint8_t*)&tof_config)[i + 1];
-        i2c_write_blocking(i2c0, tof_addr, buf, 2, false);
-        // printf("wrote %02x %02x\n", buf[0], buf[1]);
-    }
+    // uint8_t buf[2];
+    // for (int i = 0; i < sizeof(tof_config); i += 2) {
+    //     buf[0] = ((uint8_t*)&tof_config)[i];
+    //     buf[1] = ((uint8_t*)&tof_config)[i + 1];
+    //     i2c_write_blocking(i2c0, tof_addr, buf, 2, false);
+    //     // printf("wrote %02x %02x\n", buf[0], buf[1]);
+    // }
 
     while (true)
     {

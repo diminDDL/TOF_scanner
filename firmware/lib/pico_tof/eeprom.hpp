@@ -15,9 +15,9 @@ static const uint8_t eeprom_magic = 0xEB;
 static const uint8_t eeprom_serial_size = EEPROM_SERIAL_SIZE;
 static const uint8_t eeprom_calibration_offset = 0x24;    // total of 13 calibration registers, 0x24 - 0x30
 
-bool EEPROM_begin(i2c_inst_t *i2c, uint8_t addr);
-uint8_t EEPROM_PageRead(i2c_inst_t *i2c, uint16_t addr, uint8_t* data, uint8_t size);
-uint8_t EEPROM_PageWrite(i2c_inst_t *i2c, uint16_t addr, uint8_t* data, uint8_t size);
+bool EEPROM_begin(i2c_inst_t *i2c, uint8_t device_addr);
+uint8_t EEPROM_PageRead(i2c_inst_t *i2c, uint8_t device_addr, uint16_t mem_addr, uint8_t* data, uint8_t size);
+uint8_t EEPROM_PageWrite(i2c_inst_t *i2c, uint8_t device_addr, uint16_t mem_addr, uint8_t* data, uint8_t size);
 
 
 #endif // EEPROM_H
