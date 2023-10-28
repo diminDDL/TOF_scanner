@@ -7,6 +7,7 @@
 #include "pwm.pio.h"
 #include "lib/pico_tof/picotof.hpp"
 #include "lib/pico_tof/eeprom.hpp"
+#include "lib/pico_tof/isl29501.hpp"
 
 const uint sda_pin = 12;
 const uint scl_pin = 13;
@@ -52,6 +53,16 @@ void test_read(i2c_inst_t *i2c, uint8_t device_addr) {
     }
 }
 
+uint8_t ISL29501_ReadDeviceID(i2c_inst_t *i2c, uint8_t device_addr) {
+    uint8_t deviceID;
+    if(ISL29501_Read(i2c, device_addr, 0x00, &deviceID, 1)) {
+        printf("Device ID: 0x%02x\n", deviceID);
+    } else {
+        printf("Failed to read Device ID\n");
+    }
+    return deviceID;
+}
+
 int main() {
 
     stdio_init_all();
@@ -81,8 +92,8 @@ int main() {
     gpio_pull_up(sda_pin);
     gpio_pull_up(scl_pin);
     
-    sleep_ms(1000);
-    printf("configuring tof\n");
+    sleep_ms(2000);
+    printf("configuring eeprom\n");
     // try to intialize the eeporm 
     if(!EEPROM_begin(i2c0, eeprom_addr)){
         printf("Boy you fucked up I2C EEPROM no worky :(\n");
@@ -92,6 +103,10 @@ int main() {
     }
 
     test_read(i2c0, eeprom_addr);
+
+    printf("configuring tof\n");
+    // test teh ISL
+    ISL29501_ReadDeviceID(i2c0, isl29501_addr);
 
     // write the default values to the sensor
     // uint8_t buf[2];

@@ -1,5 +1,5 @@
-#ifndef EEPROM_H
-#define EEPROM_H
+#ifndef EEPROM_HPP
+#define EEPROM_HPP
 
 #include "pico/stdlib.h"
 #include "hardware/i2c.h"
@@ -20,4 +20,4 @@ uint8_t EEPROM_PageRead(i2c_inst_t *i2c, uint8_t device_addr, uint16_t mem_addr,
 uint8_t EEPROM_PageWrite(i2c_inst_t *i2c, uint8_t device_addr, uint16_t mem_addr, uint8_t* data, uint8_t size);
 
 
-#endif // EEPROM_H
+#endif // EEPROM_HPP

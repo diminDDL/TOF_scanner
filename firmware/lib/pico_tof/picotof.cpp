@@ -1,29 +1,20 @@
 #include "picotof.hpp"
 #include "pico/stdlib.h"
 #include "eeprom.hpp"
-// #include <stdio.h>
-// #include "math.h"
-// // #include "EEPROM.h"
-// // #include "ISL29501.h"
+
+#include <stdio.h>
+#include "math.h"
+#include "eeprom.hpp"
+#include "isl29501.hpp"
 
 
-// #define GPIO_CHANNEL 1		 //first channel
-// #define GPIO_DIRMASK 0x01	//set first channel tristate buffers: bit 1 = output (SS), bit 0 = input(IRQ)
-// #define GPIO_DATA_RDY_MSK 0x01 
-// ISL29501 myToFDevice;
-// EPROM myEPROMDevice;
-// XGpio gpio;
-// CALIBDATA calib;
-// SERIALNODATA serialNo ;
+EEPROM_DATA calib;
 
 
-// /* ------------------------------------------------------------ */
-// /*					Local functions used for calibration        */
-// /* ------------------------------------------------------------ */
-// void CALIB_initiate_calibration_measurement();
-// void CALIB_perform_magnitude_calibration();
-// void CALIB_perform_crosstalk_calibration();
-// void CALIB_perform_distance_calibration(double actual_dist);
+void start_calibration_meas();
+void start_magnitude_calibration();
+void start_crosstalk_calibration();
+void start_distance_calibration(double measured_dist);
 // uint8_t CALIB_WriteCalibsToEPROM_Raw(uint8_t baseAddr, uint8_t skip_read_regs);
 // uint8_t CALIB_ReadCalibsFromEPROM_Raw(CALIBDATA *pCalib, uint8_t baseAddr, uint8_t skip_write_regs);
 // uint8_t CALIB_Read_ISL29501_Regs();

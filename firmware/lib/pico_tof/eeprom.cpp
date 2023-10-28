@@ -10,12 +10,12 @@ uint8_t EEPROM_get_device_address(uint8_t device_addr, uint16_t mem_addr);
 
 uint8_t data_buff[8] = {0};
 
-bool EEPROM_begin(i2c_inst_t *i2c, uint8_t addr)
+bool EEPROM_begin(i2c_inst_t *i2c, uint8_t device_addr)
 {
 	i2c_init(i2c, 100000);
     // try reading to check if it's correct
     uint8_t rxdata = 0;
-    int ret = i2c_read_blocking(i2c, addr, &rxdata, 1, false);
+    int ret = i2c_read_blocking(i2c, device_addr, &rxdata, 1, false);
     if (ret < 0)
         return false;
     else
