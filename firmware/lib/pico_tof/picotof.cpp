@@ -7,146 +7,157 @@
 #include "eeprom.hpp"
 #include "isl29501.hpp"
 
+CALIBDATA calib;
+SERIALNODATA serialNo;
 
-EEPROM_DATA calib;
+i2c_inst_t *tof_i2c;
+uint tof_irq_pin;
+uint tof_ss_pin;
 
 
 void start_calibration_meas();
 void start_magnitude_calibration();
 void start_crosstalk_calibration();
 void start_distance_calibration(double measured_dist);
-// uint8_t CALIB_WriteCalibsToEPROM_Raw(uint8_t baseAddr, uint8_t skip_read_regs);
-// uint8_t CALIB_ReadCalibsFromEPROM_Raw(CALIBDATA *pCalib, uint8_t baseAddr, uint8_t skip_write_regs);
-// uint8_t CALIB_Read_ISL29501_Regs();
-// uint8_t CALIB_Write_ISL29501_Regs();
-// uint8_t CALIB_WriteCalibsToEPROM_User(uint8_t msg_flag);
-
-
-// /* ------------------------------------------------------------ */
-// /*					 Utils		    						    */
-// /* ------------------------------------------------------------ */
-// unsigned char GetBufferChecksum(unsigned char *pBuf, int len);
-// double _3bytes_to_double(uint8_t EXP, uint8_t MSB, uint8_t LSB);
-// double _2bytes_to_double(uint8_t MSB, uint8_t LSB);
-// void double_to_3bytes(double AVG, uint8_t* EXP, uint8_t* MSB, uint8_t* LSB);
-// void double_to_2bytes(double AVG, uint8_t* MSB, uint8_t* LSB);
-
-// /* ------------------------------------------------------------ */
-// /** void  PmodToF_Initialize()
-// **  Return Value:
-// **      none
-// **
-// **  Description:
-// ** This function initializes the Pmod ToF device. This function initialize the EEPROM and ISL29501.
-// ** ISL29501_begin 	- sets the ISL29501 chip address for communication over I2C protocol and initializes
-// **             	the registers as described in the Firmware Routines documentation( an1724.pdf ) for Chip Initialization
-// ** EPROM_begin 	- sets the EEPROM chip address for communication over I2C protocol
-// ** XGpio_Initialize and XGpio_SetDataDirection configure the GPIO communication for IRQ and SS pin
-// ** 				of the ISL29501 chip.
-// **/
-// void PmodToF_Initialize()
-// {
-// 	/* ------------------------------------------------------------- */
-// 	/* ---------------------------!!!------------------------------- */
-// 	/* ---------------------------!!!------------------------------- */
-// 	/* ---------------------------!!!------------------------------- */
-
-// 	//These values are the standard values chosen by Digilent for this device.The user must be very carefully if he wishes to change them.
-// 	//Please read ISL29501 documentation before proceeding.
-// 	//Check https://reference.digilentinc.com/reference/pmod/pmodtof/zynqlibraryuserguide for additional details
-// 	//The user must modify these values before performing manual calibration,
-// 	//but the user should make a backup of them, in case it is needed to be restored
-// 	uint8_t reg0x10_data = 0x04;
-// 	uint8_t reg0x11_data = 0x6E;
-// 	uint8_t reg0x13_data = 0x71;
-// 	uint8_t reg0x60_data = 0x01;
-// 	uint8_t reg0x18_data = 0x22;
-// 	uint8_t reg0x19_data = 0x22;
-// 	uint8_t reg0x90_data = 0x0F;
-// 	uint8_t reg0x91_data = 0xFF;
-// 	/* ------------------------------------------------------------ */
-
-// 	ISL29501_begin(&myToFDevice, XPAR_IIC_0_BASEADDR,ISL29501_CHIP_ADDRESS);
-//     EPROM_begin(&myEPROMDevice, XPAR_IIC_0_BASEADDR, EPROM_CHIP_ADDRESS);
-//     XGpio_Initialize(&gpio, XPAR_GPIO_0_DEVICE_ID); //initialize input XGpio variable
-//     XGpio_SetDataDirection(&gpio, 1, GPIO_DIRMASK);
-
-//     //steps for ISL29501 Chip Initialization as described in an1724.pdf :
-//     ISL29501_WriteIIC(&myToFDevice, 0x10, &reg0x10_data, 1);
-// 	ISL29501_WriteIIC(&myToFDevice, 0x11, &reg0x11_data, 1);
-// 	ISL29501_WriteIIC(&myToFDevice, 0x13, &reg0x13_data, 1);
-// 	ISL29501_WriteIIC(&myToFDevice, 0x60, &reg0x60_data, 1);
-// 	ISL29501_WriteIIC(&myToFDevice, 0x18, &reg0x18_data, 1);
-// 	ISL29501_WriteIIC(&myToFDevice, 0x19, &reg0x19_data, 1);
-// 	ISL29501_WriteIIC(&myToFDevice, 0x90, &reg0x90_data, 1);
-// 	ISL29501_WriteIIC(&myToFDevice, 0x91, &reg0x91_data, 1);
-
-// 	PmodToF_ReadCalibsFromEPROM_User();
-// }
+uint8_t write_to_EEPROM_raw(uint8_t start_addr, bool skip_read);
+uint8_t read_EEPROM_raw(CALIBDATA *configPtr, uint8_t start_addr, bool skip_read);
+uint8_t read_isl();
+uint8_t write_isl();
+uint8_t write_to_EEPROM_user();
 
 
 
-// /* ------------------------------------------------------------ */
-// /** double PmodToF_perform_distance_measurement()
-// **  Parameters:
-// **      none
-// **
-// **  Return Value:
-// **      distance - the distance in meters, measured by the PmodToF device
-// **
-// **  Description:
-// **  Function for performing a distance measurement.
-// **  Before running this command, it is important that a manual calibration 
-// **  was performed or that a calibration was stored in then imported
-// **  from the EEPROM user area or that factory calibration was restored from EEPROM.
-// **  It follows the steps as described in the Firmware Routines documentation (an1724.pdf)
-// **  for making a distance measurement.
-// **  As a result of measurement, the 0xD1 and 0xD2 registers are set with the values
-// **  corresponding to DistanceMSB and DistanceLSB.
-// **  The distance is computed starting from the values of these 2 registers using the 
-// **  formula provided in the in the Firmware Routines documentation(an1724.pdf).
-// **/
-// double PmodToF_perform_distance_measurement()
-// {
-//     /* WRITE REG */
-//     uint8_t reg0x13_data = 0x7D;
-//     uint8_t reg0x60_data = 0x01;
-//     /* READ REG */
-//     uint8_t unused;
-//     uint8_t DistanceMSB;
-//     uint8_t DistanceLSB;
+unsigned char gen_checksum(unsigned char *buff, uint size);
+double bytes_to_double(uint8_t EXP, uint8_t MSB, uint8_t LSB);
+double bytes_to_double(uint8_t MSB, uint8_t LSB);
+void double_to_bytes(double AVG, uint8_t* EXP, uint8_t* MSB, uint8_t* LSB);
+void double_to_bytes(double AVG, uint8_t* MSB, uint8_t* LSB);
 
-//     double distance = 1;
-//     ISL29501_WriteIIC(&myToFDevice, 0x13, &reg0x13_data, 1);
-//     ISL29501_WriteIIC(&myToFDevice, 0x60, &reg0x60_data, 1);
-//     ISL29501_ReadIIC(&myToFDevice, 0x69, &unused, 1);
-//     CALIB_initiate_calibration_measurement();
-// 	//waits for IRQ
-//     while((XGpio_DiscreteRead(&gpio, GPIO_CHANNEL) & GPIO_DATA_RDY_MSK) != 0 );
-//     ISL29501_ReadIIC(&myToFDevice, 0xD1, &DistanceMSB, 1);
-//     ISL29501_ReadIIC(&myToFDevice, 0xD2, &DistanceLSB, 1);
-//     distance =(((double)DistanceMSB * 256 + (double)DistanceLSB)/65536) * 33.31;
-//     return  distance;
-// }
-// /* ------------------------------------------------------------ */
-// /** void CALIB_initiate_calibration__measurement()
-// **  Parameters:
-// **      none
-// **
-// **  Return Value:
-// **      none
-// **
-// **  Description:
-// **  Function for initiating calibration measurements. Puts Sample Start(SS) pin in low logic to trigger a measurement cycle.
-// **  SS will be hold to low logic for 5.600 ms then to high logic for 14.400 ms, resulting a SS period of 20 ms.
-// **/
-// void CALIB_initiate_calibration_measurement()
-// {
-//     XGpio_DiscreteWrite(&gpio, GPIO_CHANNEL, 0x0); //write to the Channel 1, SS -> "0";
-//     usleep(5600); //5600 microseconds
-//     XGpio_DiscreteWrite(&gpio, GPIO_CHANNEL, 0x1<<1); //write to the Channel 1, SS -> "1";
-//     usleep(14400);
-// }
+
+void tof_init(i2c_inst_t *i2c, uint irq_pin, uint ss_pin)
+{
+    tof_i2c = i2c;
+    tof_irq_pin = irq_pin;
+    tof_ss_pin = ss_pin;
+
+	uint8_t reg0x10_data = 0x04;
+	uint8_t reg0x11_data = 0x6E;
+	uint8_t reg0x13_data = 0x71;
+	uint8_t reg0x60_data = 0x01;
+	uint8_t reg0x18_data = 0x22;
+	uint8_t reg0x19_data = 0x22;
+	uint8_t reg0x90_data = 0x0F;
+	uint8_t reg0x91_data = 0xFF;
+
+	ISL29501_begin(i2c, isl29501_addr);
+    EEPROM_begin(i2c, eeprom_addr);
+
+    gpio_init(irq_pin);
+    gpio_set_dir(irq_pin, GPIO_IN);
+    
+    gpio_init(ss_pin);
+    gpio_set_dir(ss_pin, GPIO_OUT);
+
+    ISL29501_Write(i2c, isl29501_addr, 0x10, &reg0x10_data, 1);
+    ISL29501_Write(i2c, isl29501_addr, 0x11, &reg0x11_data, 1);
+    ISL29501_Write(i2c, isl29501_addr, 0x13, &reg0x13_data, 1);
+    ISL29501_Write(i2c, isl29501_addr, 0x60, &reg0x60_data, 1);
+    ISL29501_Write(i2c, isl29501_addr, 0x18, &reg0x18_data, 1);
+    ISL29501_Write(i2c, isl29501_addr, 0x19, &reg0x19_data, 1);
+    ISL29501_Write(i2c, isl29501_addr, 0x90, &reg0x90_data, 1);
+    ISL29501_Write(i2c, isl29501_addr, 0x91, &reg0x91_data, 1);
+
+	tof_read_calibration_user();
+}
+
+
+double tof_measure_distance()
+{
+    
+    uint8_t reg0x13_data = 0x7D;
+    uint8_t reg0x60_data = 0x01;
+    
+    uint8_t unused;
+    uint8_t DistanceMSB;
+    uint8_t DistanceLSB;
+
+    double distance = 1;
+    ISL29501_Write(tof_i2c, isl29501_addr, 0x13, &reg0x13_data, 1);
+    ISL29501_Write(tof_i2c, isl29501_addr, 0x60, &reg0x60_data, 1);
+    ISL29501_Read(tof_i2c, isl29501_addr, 0x69, &unused, 1);
+    start_calibration_meas();
+
+    // wait for IRQ
+    while(gpio_get(tof_irq_pin) != 0);
+    ISL29501_Read(tof_i2c, isl29501_addr, 0xD1, &DistanceMSB, 1);
+    ISL29501_Read(tof_i2c, isl29501_addr, 0xD2, &DistanceLSB, 1);
+
+    distance =(((double)DistanceMSB * 256 + (double)DistanceLSB)/65536) * 33.31;
+    return  distance;
+}
+
+uint8_t tof_read_calibration_user()
+{
+    return read_EEPROM_raw(&calib, adr_eprom_calib, false);
+
+}
+
+uint8_t read_EEPROM_raw(CALIBDATA *configPtr, uint8_t start_addr, bool skip_read)
+{
+    uint8_t bCrc, bCrcRead,result;
+    // read calibration structure
+    result = EEPROM_PageRead(tof_i2c, eeprom_addr, start_addr, (uint8_t *)configPtr, sizeof(CALIBDATA));
+    
+    if(result != 1)
+    {
+        return result;
+    }
+    // check CRC
+    bCrcRead = configPtr->calib_crc;
+    configPtr->calib_crc = 0;
+
+    bCrc = gen_checksum((uint8_t *)configPtr, sizeof(CALIBDATA));
+
+    configPtr->calib_crc = bCrcRead;
+
+    if(configPtr->calib_magic != eeprom_magic)
+    {
+        // missing magic number
+        return 0;
+    }
+
+    if(configPtr->calib_crc != bCrc)
+    {
+        // CRC error
+        return 0;
+    }
+    if (skip_read == false)
+    	write_isl();
+
+    return 1;
+}
+
+
+uint8_t write_isl()
+{
+	uint8_t result = 1;
+    for(int i = 0; i < 13; i++)
+    {
+        result = ISL29501_Write(tof_i2c, isl29501_addr, calibration_address_offset_isl29501 + i, calib.calib_conf_registers + i, 1);
+        if(result != 1)
+        return result;
+    }
+    return result;
+}
+
+
+void start_calibration_meas()
+{
+    gpio_put(tof_ss_pin, 0);
+    sleep_us(5600);
+    gpio_put(tof_ss_pin, 1);
+    sleep_us(14400);
+}
 
 // /* ------------------------------------------------------------ */
 // /** uint8_t PmodToF_start_calibration(double actual_distance)
@@ -459,31 +470,6 @@ void start_distance_calibration(double measured_dist);
 //     }
 // }
 
-
-
-// /***    PmodToF_ReadCalibsFromEPROM_User
-// **
-// **  Parameters:
-// **      none
-// **
-// **  Return Value:
-// **      uint8_t
-// **          ERRVAL_SUCCESS                  0       // success
-// **          ERRVAL_EPROM_MAGICNO            0xFD    // ERROR, wrong magic number when reading data from EEPROM.
-// **          ERRVAL_EPROM_CRC                0xFE    // wrong checksum  when reading data from EEPROM.
-// **
-// **  Description:
-// **      This function reads the user calibration data from EEPROM.
-// **      It calls the local function CALIB_ReadAllCalibsFromEPROM_Raw providing the address of user calibration area in EPROM,
-// **      The function returns ERRVAL_SUCCESS for success or the error codes provided by CALIB_ReadCalibsFromEPROM_Raw function.
-// **
-// */
-// uint8_t PmodToF_ReadCalibsFromEPROM_User()
-// {
-//     return CALIB_ReadCalibsFromEPROM_Raw(&calib, (uint8_t)ADR_EPROM_CALIB,0);
-
-// }
-
 // /***    PmodToF_ReadSerialNoFromEPROM
 // **
 // **  Parameters:
@@ -577,66 +563,6 @@ void start_distance_calibration(double measured_dist);
 //     return bResult;
 // }
 
-// /***    CALIB_ReadCalibsFromEPROM_Raw
-// **
-// **  Parameters:
-// **      CALIBDATA *pCalib   - pointer to CALIB structure where data will be read from EPROM
-// **      uint8_t baseAddr    - the EPROM address from where the calibration data read
-// **                  This will distinguish between user and factory calibration areas
-// **
-// **
-// **  Return Value:
-// **      uint8_t
-// **          ERRVAL_SUCCESS                  0       // success
-// **          ERRVAL_EPROM_MAGICNO            0xFD    // wrong Magic No. when reading data from EEPROM
-// **          ERRVAL_EPROM_CRC                0xFE    // wrong CRC when reading data from EEPROM
-// **			ERRVAL_EPROM_READ 				0xF9    // failed to read EEPROM over I2C communication
-// **
-// **  Description:
-// **      This local function reads calibration data from a specific location in EPROM.
-// **      It is called by PmodToF_ReadAllCalibsFromEPROM_User and PmodToF_RestoreAllCalibsFromEPROM_Factory,
-// **      which provide proper address in EPROM for user and factory calibration areas.
-// **      This function shouldn't be called by user, instead, the user should call the specified functions.
-// **		The function checks the signature byte called magic number and the checksum of the retrieved content.
-// **      The function returns ERRVAL_SUCCESS for success.
-// **      The function returns ERRVAL_EPROM_MAGICNO when a wrong magic number was detected in the data read from EPROM.
-// **      The function returns ERRVAL_EPROM_CRC when the checksum is wrong for the data read from EPROM.
-// **		The function also may return the error codes provided by EPROM_ReadIIC function.
-// **
-// */
-// uint8_t CALIB_ReadCalibsFromEPROM_Raw(CALIBDATA *pCalib, uint8_t baseAddr, uint8_t skip_write_regs)
-// {
-//     uint8_t bCrc, bCrcRead,result;
-//     // read calibration structure
-//     result=EPROM_PageRead(&myEPROMDevice, baseAddr, (uint8_t *)pCalib, sizeof(CALIBDATA));
-//     if(result != ERRVAL_SUCCESS)
-//     {
-//         return result;
-//     }
-//     // check CRC
-//     bCrcRead = pCalib->crc;
-//     pCalib->crc = 0;
-
-//     bCrc = GetBufferChecksum((uint8_t *)pCalib, sizeof(CALIBDATA));
-
-//     pCalib->crc = bCrcRead;
-
-//     if(pCalib->magic != EPROM_MAGIC_NO)
-//     {
-//         // missing magic number
-//         return ERRVAL_EPROM_MAGICNO;
-//     }
-
-//     if(pCalib->crc != bCrc)
-//     {
-//         // CRC error
-//         return ERRVAL_EPROM_CRC;
-//     }
-//     if (skip_write_regs == 0)
-//     	CALIB_Write_ISL29501_Regs();
-
-//     return ERRVAL_SUCCESS;
-// }
 // /***    CALIB_Read_ISL29501_Regs
 // **
 // **  Parameters:
@@ -656,62 +582,6 @@ void start_distance_calibration(double measured_dist);
 // 	 uint8_t result;
 //      result = ISL29501_ReadIIC(&myToFDevice, ADR_OFFSET_CALIB_REG_ISL29501, calib.regs, 13);
 //      return result;
-// }
-
-// /***    CALIB_Write_ISL29501_Regs
-// **
-// **  Parameters:
-// **			none
-// **
-// **  Return Value:
-// **	uint8_t		ERRVAL_SUCCESS		0       // success
-// **	uint8_t		ERRVAL_ToF_WRITE	0xF8    // failed to write ISL29501 registers over I2C communication
-// **  Description:
-// **      This local function writes calibration data from the calib global structure 
-// **		to the 13 ISL29501 calibration registers starting at 0x24 address, using the ISL29501_WriteIIC function.
-// **      The function returns ERRVAL_SUCCESS for success or the error codes provided by ISL29501_WriteIIC function.
-// **
-// */
-// uint8_t CALIB_Write_ISL29501_Regs()
-// {
-// 	uint8_t result=ERRVAL_SUCCESS;
-//     for(int i = 0; i < 13; i++)
-//     {
-//         result=ISL29501_WriteIIC(&myToFDevice, ADR_OFFSET_CALIB_REG_ISL29501 + i, calib.regs + i, 1);
-//         if(result != ERRVAL_SUCCESS)
-//         return result;
-//     }
-//     return result;
-// }
-
-
-// /***    GetBufferChecksum
-// **
-// **  Synopsis:
-// **      GetBufferChecksum(*pBuf, len)
-// **
-// **  Parameters:
-// **      pBuf - buffer for which the checksum is computed
-// **      len - buffer length on which the checksum is computed
-// **
-// **  Return Values:
-// **      returns the value of checksum, computed for the specified pBuf, on the specified len
-// **
-// **  Description:
-// **      This function computes the one byte checksum by adding the specified number of consecutive bytes from the specified location.
-// **      Returns the value of checksum.
-// **
-// */
-
-// unsigned char GetBufferChecksum(unsigned char *pBuf, int len)
-// {
-//     int i;
-//     unsigned char checksum = 0;
-//     for(i= 0; i < len; i++)
-//     {
-//         checksum += pBuf[i];
-//     }
-//     return checksum;
 // }
 
 // /***
@@ -854,3 +724,14 @@ void start_distance_calibration(double measured_dist);
 //     *msb = (uint8_t) ((iNum & 0x0000FF00) >> 8);
 //     *lsb = (uint8_t) (iNum & 0x000000FF);
 // }
+
+
+unsigned char gen_checksum(unsigned char *buff, uint size){
+    int i;
+    unsigned char checksum = 0;
+    for(i= 0; i < size; i++)
+    {
+        checksum += buff[i];
+    }
+    return checksum;
+}
