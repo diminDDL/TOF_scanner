@@ -24,7 +24,7 @@ uint8_t ISL29501_Read(i2c_inst_t *i2c, uint8_t device_addr, uint8_t reg_addr, ui
         return 0;
     }
 
-    // Read 'nData' bytes of data starting from the specified register
+    // Read n bytes of data starting from the specified register
     if (i2c_read_timeout_us(i2c, device_addr, data, size, false, 10000) < size) {
         return 0;
     }
@@ -43,7 +43,7 @@ uint8_t ISL29501_Write(i2c_inst_t *i2c, uint8_t device_addr, uint8_t reg_addr, u
     
     // Check if all bytes were written
     if (bytes_written == size + 1) {
-        return 0;
+        return 1;
     }
-    return 1;
+    return 0;
 }

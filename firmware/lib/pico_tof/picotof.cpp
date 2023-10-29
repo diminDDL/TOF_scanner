@@ -57,17 +57,37 @@ void tof_init(i2c_inst_t *i2c, uint irq_pin, uint ss_pin)
     
     gpio_init(ss_pin);
     gpio_set_dir(ss_pin, GPIO_OUT);
+    gpio_put(ss_pin, 1);
 
-    ISL29501_Write(i2c, isl29501_addr, 0x10, &reg0x10_data, 1);
-    ISL29501_Write(i2c, isl29501_addr, 0x11, &reg0x11_data, 1);
-    ISL29501_Write(i2c, isl29501_addr, 0x13, &reg0x13_data, 1);
-    ISL29501_Write(i2c, isl29501_addr, 0x60, &reg0x60_data, 1);
-    ISL29501_Write(i2c, isl29501_addr, 0x18, &reg0x18_data, 1);
-    ISL29501_Write(i2c, isl29501_addr, 0x19, &reg0x19_data, 1);
-    ISL29501_Write(i2c, isl29501_addr, 0x90, &reg0x90_data, 1);
-    ISL29501_Write(i2c, isl29501_addr, 0x91, &reg0x91_data, 1);
+    bool ret = true;
 
-	tof_read_calibration_user();
+    ret &= ISL29501_Write(i2c, isl29501_addr, 0x10, &reg0x10_data, 1);
+    ret &= ISL29501_Write(i2c, isl29501_addr, 0x11, &reg0x11_data, 1);
+    ret &= ISL29501_Write(i2c, isl29501_addr, 0x13, &reg0x13_data, 1);
+    ret &= ISL29501_Write(i2c, isl29501_addr, 0x60, &reg0x60_data, 1);
+    ret &= ISL29501_Write(i2c, isl29501_addr, 0x18, &reg0x18_data, 1);
+    ret &= ISL29501_Write(i2c, isl29501_addr, 0x19, &reg0x19_data, 1);
+    ret &= ISL29501_Write(i2c, isl29501_addr, 0x90, &reg0x90_data, 1);
+    ret &= ISL29501_Write(i2c, isl29501_addr, 0x91, &reg0x91_data, 1);
+
+    if (ret == false)
+    {
+        printf("Failed to write to ISL29501\n");
+    }
+    else
+    {
+        printf("ISL29501 configured\n");
+    }
+
+	ret = tof_read_calibration_user();
+    if (ret == 0)
+    {
+        printf("Failed to read calibration from EEPROM\n");
+    }
+    else
+    {
+        printf("Calibration read from EEPROM\n");
+    }
 }
 
 
@@ -81,16 +101,18 @@ double tof_measure_distance()
     uint8_t DistanceMSB;
     uint8_t DistanceLSB;
 
-    double distance = 1;
-    ISL29501_Write(tof_i2c, isl29501_addr, 0x13, &reg0x13_data, 1);
-    ISL29501_Write(tof_i2c, isl29501_addr, 0x60, &reg0x60_data, 1);
-    ISL29501_Read(tof_i2c, isl29501_addr, 0x69, &unused, 1);
-    start_calibration_meas();
 
+    double distance = 1;
+    bool ret = true;
+    ret &= ISL29501_Write(tof_i2c, isl29501_addr, 0x13, &reg0x13_data, 1);
+    ret &= ISL29501_Write(tof_i2c, isl29501_addr, 0x60, &reg0x60_data, 1);
+    ret &= ISL29501_Read(tof_i2c, isl29501_addr, 0x69, &unused, 1);
+    start_calibration_meas();
+    uint32_t start_time = time_us_32();
     // wait for IRQ
-    while(gpio_get(tof_irq_pin) != 0);
-    ISL29501_Read(tof_i2c, isl29501_addr, 0xD1, &DistanceMSB, 1);
-    ISL29501_Read(tof_i2c, isl29501_addr, 0xD2, &DistanceLSB, 1);
+    while(gpio_get(tof_irq_pin) != 0 | (time_us_32() - start_time) > 100000);
+    ret &= ISL29501_Read(tof_i2c, isl29501_addr, 0xD1, &DistanceMSB, 1);
+    ret &= ISL29501_Read(tof_i2c, isl29501_addr, 0xD2, &DistanceLSB, 1);
 
     distance =(((double)DistanceMSB * 256 + (double)DistanceLSB)/65536) * 33.31;
     return  distance;

@@ -91,10 +91,12 @@ int main() {
     // try to initialize it and read it
     tof_init(i2c0, irq_pin, ss_pin);
 
+    sleep_ms(10);
+
     while (true)
     {
         printf("%f\n", tof_measure_distance());
-        sleep_ms(1000);
+        //sleep_ms(10);
     }
     
 
