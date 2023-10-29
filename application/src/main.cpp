@@ -142,8 +142,8 @@ void guiThread()
 
     // TODO clean this up
 
-#define X_MAX 1000
-#define Y_MAX 1000
+    #define X_MAX 1000
+    #define Y_MAX 1000
 
     // glm::mat4 ver_mat = glm::mat4(1.0f);
     glm::vec3 rot = glm::vec3(0.5f, 0.0f, 0.0f);
@@ -273,6 +273,8 @@ void guiThread()
     unsigned int texture;
     glGenTextures(1, &texture);
     GLuint framebuffer;
+    GLuint depthbuffer;
+    glGenRenderbuffers(1, &depthbuffer);
     glGenFramebuffers(1, &framebuffer);
     GLuint VBO;
     glGenBuffers(1, &VBO);
@@ -423,6 +425,11 @@ void guiThread()
 
             glBindVertexArray(VAO);
             glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+            glBindTexture(GL_TEXTURE_2D, texture);
+
+            glBindRenderbuffer(GL_RENDERBUFFER, depthbuffer);
+            glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, size.x, size.y);
+            glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthbuffer);
 
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, size.x, size.y, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
             glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
@@ -433,7 +440,9 @@ void guiThread()
 
             glViewport(0, 0, size.x, size.y);
             glClearColor(color[0], color[1], color[2], color[3]);
-            glClear(GL_COLOR_BUFFER_BIT);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            
+            
 
             if (freq != old_freq)
             {
@@ -514,7 +523,7 @@ void guiThread()
                 isDragging = false;
             }
 
-            if (isHovered && ImGui::IsMouseDown(2)) // Right mouse button
+            if (isHovered && ImGui::IsMouseDown(2)) // middle mouse button
             {
                 if (!isDraggingTranslation)
                 {
@@ -529,7 +538,7 @@ void guiThread()
                     double offsetX = mouseX - lastTransX;
                     double offsetY = lastTransY - mouseY; // This inverts the y-axis translation
 
-                    const float translationSensitivity = 0.01f; // Adjust this value to your liking
+                    const float translationSensitivity = 0.004f; // Adjust this value to your liking
                     trans.x += offsetX * translationSensitivity;
                     trans.y += offsetY * translationSensitivity;
 
