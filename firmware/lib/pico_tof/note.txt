@@ -1,7 +1,11 @@
 This is a picosdk compatible code for the Digilent PMOD time of light sensor based on the ISL29501.
 It was completely rewritten from scratch, however the original code was used as a reference.
-The code on github does not have an explicit license,
-here is the link to the original:
+
+Below is a link to the original:
 https://github.com/Digilent/ZyboZ7-20-PmodToF-Demo
+It was created by:
+Author: Ana-Maria-Eliza Balas
+ana-maria.balas@digilent.ro
+Copyright 2019, Digilent Inc
 
 My code is released under MIT. See LICENSE file for details.

@@ -8,6 +8,7 @@
 #include "lib/pico_tof/picotof.hpp"
 #include "lib/pico_tof/eeprom.hpp"
 #include "lib/pico_tof/isl29501.hpp"
+#include "lib/pwm.hpp"
 
 const uint sda_pin = 12;
 const uint scl_pin = 13;
@@ -15,6 +16,8 @@ const uint scl_pin = 13;
 const uint ss_pin = 14;
 const uint irq_pin = 15;
 
+const uint yaw_servo_pin = 0;
+const uint pitch_servo_pin = 1;
 
 bool reserved_addr(uint8_t addr) {
     return (addr & 0x78) == 0 || (addr & 0x78) == 0x78;
@@ -46,6 +49,22 @@ uint8_t ISL29501_ReadDeviceID(i2c_inst_t *i2c, uint8_t device_addr) {
 int main() {
 
     stdio_init_all();
+
+    PWM pwm_yaw(yaw_servo_pin, pwm_gpio_to_slice_num(yaw_servo_pin));
+    pwm_yaw.init();
+    pwm_yaw.set_freq(50);
+    //pwm_yaw.set_duty_cycle(50);
+    pwm_yaw.set_duty_cycle_us(0);
+    // 1530 = stop, or just stop the pwm
+    pwm_yaw.set_enabled(true);
+
+    PWM pwm_pitch(pitch_servo_pin, pwm_gpio_to_slice_num(pitch_servo_pin));
+    pwm_pitch.init();
+    pwm_pitch.set_freq(50);
+    //pwm_pitch.set_duty_cycle(50);
+    pwm_pitch.set_duty_cycle_us(2000);
+    // 1530 = stop, or just stop the pwm
+    pwm_pitch.set_enabled(true);
 
     static const uint led_pin = 25;
     static const float pio_freq = 2000;
