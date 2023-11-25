@@ -27,6 +27,15 @@ static void glfw_error_callback(int error, const char *description)
     fprintf(stderr, "GLFW Error %d: %s\n", error, description);
 }
 
+#define X_MAX 1000
+#define Y_MAX 1000
+
+float *points = new float[3 * X_MAX * Y_MAX];
+
+static int scan_resolution = 1;
+static int vertical_angle = 90;
+static int horizontal_angle = 90;
+
 char selected_port[24] = "Select port\0";
 
 char magic_symbol = 'A';
@@ -79,6 +88,7 @@ void SerialThread()
 
 uint window_width = 800;
 uint window_height = 800;
+
 // GUI thread
 GLuint textureID;
 void guiThread()
@@ -142,16 +152,11 @@ void guiThread()
 
     // TODO clean this up
 
-    #define X_MAX 1000
-    #define Y_MAX 1000
-
     // glm::mat4 ver_mat = glm::mat4(1.0f);
     glm::vec3 rot = glm::vec3(0.5f, 0.0f, 0.0f);
     glm::vec3 trans = glm::vec3(0.0f, 0.0f, 0.0f);
     glm::vec3 points_color = glm::vec3(0.0f, 0.0f, 0.6f);
     float color[4] = {0.0, 0.3, 0.0, 0.0};
-
-    float *points = new float[3 * X_MAX * Y_MAX];
 
     float freq = 1;
     float old_freq = !freq;
@@ -572,22 +577,22 @@ void guiThread()
                 ImGui::SetWindowPos(ImVec2((window_width / 2) - 150, (window_height / 2) - 100));
 
             // Add a slider to define the resolution of the scan
-            static int scan_resolution = 100;
+            
             ImGui::SetCursorPosX((300 - 100) / 2);
-            ImGui::Text("Scan resolution (points per degree)");
+            ImGui::Text("Scan resolution\n(points per degree)");
             ImGui::SetCursorPosX((300 - 100) / 4);
-            ImGui::SliderInt("##Scan resolution", &scan_resolution, 1, 1000);
+            ImGui::SliderInt("##Scan resolution", &scan_resolution, 1, 20);
             // Add a sliders for the horizontal and vertical angle of the scan (in degrees)
-            static int horizontal_angle = 90;
+            
             ImGui::SetCursorPosX((300 - 100) / 2);
             ImGui::Text("Horizontal angle");
             ImGui::SetCursorPosX((300 - 100) / 4);
-            ImGui::SliderInt("##Horizontal angle", &horizontal_angle, 1, 180);
-            static int vertical_angle = 90;
+            ImGui::SliderInt("##Horizontal angle", &horizontal_angle, 1, 360);
+            
             ImGui::SetCursorPosX((300 - 100) / 2);
             ImGui::Text("Vertical angle");
             ImGui::SetCursorPosX((300 - 100) / 4);
-            ImGui::SliderInt("##Vertical angle", &vertical_angle, 1, 180);
+            ImGui::SliderInt("##Vertical angle", &vertical_angle, 1, 120);
 
             // insert some padding
             ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 20);
