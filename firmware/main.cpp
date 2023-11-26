@@ -1,15 +1,19 @@
 #include <stdio.h>
-
+#include <string.h>
 #include "pico/stdlib.h"
 #include "pico/multicore.h"
 #include "hardware/pio.h"
 #include "hardware/clocks.h"
 #include "hardware/i2c.h"
 #include "pwm.pio.h"
+#include "tusb.h"
 #include "lib/pico_tof/picotof.hpp"
 #include "lib/pico_tof/eeprom.hpp"
 #include "lib/pico_tof/isl29501.hpp"
 #include "lib/pwm.hpp"
+
+#define PITCH_OFFSET 40.0
+#define CALIB_STAND_VAL 0.19
 
 
 const uint sda_pin = 12;
@@ -61,23 +65,76 @@ float deg_pitch = 0.0;
 uint points_per_deg = 1;
 bool scan_in_progress = false;
 
+uint pitch_to_us(float pitch)
+{
+    // 0.0 -> 1000
+    // 180.0 -> 2000
+    return (uint)((pitch + PITCH_OFFSET) * 5.5555) + 1000;
+}
 
 uint pitch_setpoint = 1500;
+uint yaw_setpoint = 1500;
 
 void core1()
 {
     while (true)
     {
-        for (uint16_t i = 1000; i < 2000; i++)
-        {
-            pitch_setpoint = i;
-            sleep_ms(20);
+        sleep_ms(500);
+        //printf("-30.0\n");
+        pitch_setpoint = pitch_to_us(-40.0);
+        sleep_ms(500);
+        yaw_setpoint = (1510);
+        sleep_ms(1000);
+        yaw_setpoint = (1485);
+        sleep_ms(1000);
+        yaw_setpoint = (1500);
+        sleep_ms(1000);
+        //printf("0.0\n");
+        pitch_setpoint = pitch_to_us(0.0);
+        sleep_ms(500);
+        //printf("90.0\n");
+        pitch_setpoint = pitch_to_us(90.0);
+        sleep_ms(500);
+        //printf("180.0\n");
+        pitch_setpoint = pitch_to_us(180.0);
+        sleep_ms(2000);
+    }
+}
+
+
+bool newData = false;
+char readBuff[128] = {0};
+/*
+* Read the serial port into the buffer
+*/
+void readSerial(void){
+    // read the data from serial port and store it in the dest array
+    uint32_t i = 0;
+    uint32_t size = sizeof(readBuff);
+    if (tud_cdc_available()){
+        // clear the buffer
+        memset(readBuff, 0, size);
+    }
+    while (tud_cdc_available()) {
+        readBuff[i] = (char)tud_cdc_read_char();
+        i++;
+        newData = true;
+        if (i >= size) {
+            break;
         }
-        for (uint16_t i = 2000; i > 1000; i--)
-        {
-            pitch_setpoint = i;
-            sleep_ms(20);
-        }
+    }
+    // update internal variables
+    //updateValues();
+}
+
+void updateValues(void){
+    // parse the data
+    // parse the data
+    char * pch;
+    pch = strtok(readBuff, " ");
+    while (pch != NULL) {
+        //printf("%s\n", pch);
+        pch = strtok(NULL, " ");
     }
 }
 
@@ -90,7 +147,7 @@ int main()
     pwm_yaw.init();
     pwm_yaw.set_freq(50);
     // pwm_yaw.set_duty_cycle(50);
-    pwm_yaw.set_duty_cycle_us(0);
+    pwm_yaw.set_duty_cycle_us(1500);
     // 1530 = stop, or just stop the pwm
     pwm_yaw.set_enabled(true);
 
@@ -132,11 +189,9 @@ int main()
     sleep_ms(2000);
     printf("configuring eeprom\n");
     // try to intialize the eeporm
-    if (!EEPROM_begin(i2c0, eeprom_addr))
-    {
+    if(!EEPROM_begin(i2c0, eeprom_addr)){
         printf("Boy you fucked up I2C EEPROM no worky :(\n");
-        while (1)
-        {
+        while(1){
             tight_loop_contents();
         }
     }
@@ -158,15 +213,15 @@ int main()
         // read in the required angles and points per degree in the following format:
         // deg_yaw(float);deg_pitch(float);points_deg(int)\n
 
-        scanf("%f;%f;%d", deg_yaw, deg_pitch, points_per_deg);
-
-        sleep_ms(10);
-
-        printf("got: %f, %f, %d\n", deg_yaw, deg_pitch, points_per_deg);
         
-
-        printf("%f\n", tof_measure_distance());
-        // sleep_ms(10);
+        float distance = tof_measure_distance();
+        printf("%f\n", distance);
+        if (distance < CALIB_STAND_VAL){
+            printf("FOUND STAND\n");
+        }
+        sleep_ms(50);
         pwm_pitch.set_duty_cycle_us(pitch_setpoint);
+        pwm_yaw.set_duty_cycle_us(yaw_setpoint);
+        
     }
 }
