@@ -1,5 +1,6 @@
-#include <stdio.h>
 #include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include "pico/stdlib.h"
 #include "pico/multicore.h"
 #include "hardware/pio.h"
@@ -14,6 +15,7 @@
 
 #define PITCH_OFFSET 40.0
 #define CALIB_STAND_VAL 0.19
+#define YAW_STOP 1498
 
 
 const uint sda_pin = 12;
@@ -101,18 +103,77 @@ void core1()
     }
 }
 
+bool calibration = false;
+
+void initiateCalibration() {
+    // Implement calibration logic
+    printf("Calibration initiated\n");
+    calibration = true;
+}
+
+void initiateEstop() {
+    // Implement emergency stop logic
+    printf("Emergency stop initiated\n");
+}
+
+void getCurrentDistanceMeasurement() {
+    // Implement distance measurement retrieval
+    printf("Distance measurement: 0.0\n");
+}
+
+void setScanResolution(float resolution) {
+    // Implement scan resolution setting
+    printf("Scan resolution set to: %f\n", resolution);
+}
+
+void setScanAngleYaw(float angle) {
+    // Implement scan angle setting on yaw axis
+    printf("Scan angle set to: %f\n", angle);
+}
+
+void setScanAnglePitch(float angle) {
+    // Implement scan angle setting on pitch axis
+    printf("Scan angle set to: %f\n", angle);
+}
+
+void processCommand(char* fullCommand){
+    char *command = strtok(fullCommand, " ");
+    char *arg = strtok(NULL, " ");
+
+    if (strcmp(command, "calib") == 0) {
+        initiateCalibration();
+    } else if (strcmp(command, "estop") == 0) {
+        initiateEstop();
+    } else if (strcmp(command, "gdis") == 0) {
+        getCurrentDistanceMeasurement();
+    } else if (strcmp(command, "scres") == 0 && arg != NULL) {
+        setScanResolution(atof(arg));
+    } else if (strcmp(command, "scyaw") == 0 && arg != NULL) {
+        setScanAngleYaw(atof(arg));
+    } else if (strcmp(command, "scpitc") == 0 && arg != NULL) {
+        setScanAnglePitch(atof(arg));
+    } else {
+        printf("Invalid command or missing argument: %s\n", fullCommand);
+    }
+}
 
 bool newData = false;
 char readBuff[128] = {0};
-/*
-* Read the serial port into the buffer
-*/
-void readSerial(void){
-    // read the data from serial port and store it in the dest array
+
+void updateValues(void){
+    char *pch;
+    pch = strtok(readBuff, "\r\n");
+    while (pch != NULL) {
+        processCommand(pch);
+        pch = strtok(NULL, "\r\n");
+    }
+    memset(readBuff, 0, sizeof(readBuff));
+}
+
+void readSerial(bool update = true){
     uint32_t i = 0;
     uint32_t size = sizeof(readBuff);
     if (tud_cdc_available()){
-        // clear the buffer
         memset(readBuff, 0, size);
     }
     while (tud_cdc_available()) {
@@ -123,19 +184,91 @@ void readSerial(void){
             break;
         }
     }
-    // update internal variables
-    //updateValues();
+    if (newData) {
+        if(update)
+            updateValues();
+        newData = false;
+    }
 }
 
-void updateValues(void){
-    // parse the data
-    // parse the data
-    char * pch;
-    pch = strtok(readBuff, " ");
-    while (pch != NULL) {
-        //printf("%s\n", pch);
-        pch = strtok(NULL, " ");
+
+bool calibrate_yaw(PWM &pwm_yaw, PWM &pwm_pitch, float threshold){
+    // position the pitch to it's minimum
+    pwm_pitch.set_duty_cycle_us(pitch_to_us(-1.0 * PITCH_OFFSET));
+    // tell the user to move yaw close to the calibration ledge
+    printf("Move yaw to the calibration ledge\n");
+    // wait for the user to move the yaw to the calibration ledge, user will send 'done' when ready
+    while(true){
+        readSerial(false);
+        if(strcmp(readBuff, "done\r\n") == 0){
+            break;
+        }else{
+            printf(readBuff);
+        }
+        tight_loop_contents();
     }
+    uint step_size = 20;
+    uint step_delay = 25;
+    uint step_timeout = 15;
+    // now we move yaw to the left until we hit the ledge or timeout if we timeout, we start turning right
+    // until we hit the ledge or timeout, if we timeout again, we return false
+    // if we hit the ledge, we continue the calibration process
+    while(true){
+        // move the yaw to the left
+        pwm_yaw.set_duty_cycle_us(YAW_STOP + step_size);
+        // wait for the servo to move
+        sleep_ms(step_delay);
+        // stop the servo
+        pwm_yaw.set_duty_cycle_us(YAW_STOP);
+        // wait for the servo to stop
+        sleep_ms(step_delay);
+        // read the distance
+        float distance = tof_measure_distance();
+        printf("moving left: %f\n", distance);
+        // if we are close enough to the ledge, we are done
+        if(distance < threshold){
+            printf("FOUND STAND\n");
+            break;
+        }
+        // if we have timed out, we start turning right
+        if(step_timeout == 0){
+            break;
+        }
+        // decrement the timeout
+        step_timeout--;
+    }
+    // if we timed out, we start turning right
+    if(step_timeout == 0){
+        step_timeout = 30;
+        // now we move yaw to the right until we hit the ledge or timeout if we timeout, we return false
+        // if we hit the ledge, we continue the calibration process
+        while(true){
+            // move the yaw to the right
+            pwm_yaw.set_duty_cycle_us(YAW_STOP - step_size);
+            // wait for the servo to move
+            sleep_ms(step_delay);
+            // stop the servo
+            pwm_yaw.set_duty_cycle_us(YAW_STOP);
+            // wait for the servo to stop
+            sleep_ms(step_delay);
+            // read the distance
+            float distance = tof_measure_distance();
+            printf("moving right: %f\n", distance);
+            // if we are close enough to the ledge, we are done
+            if(distance < threshold){
+                printf("FOUND STAND\n");
+                break;
+            }
+            // if we have timed out, we return false
+            if(step_timeout == 0){
+                return false;
+            }
+            // decrement the timeout
+            step_timeout--;
+        }
+    }
+    // TODO: finish the time measurement to get a deg to us conversion
+    return true;
 }
 
 int main()
@@ -147,7 +280,7 @@ int main()
     pwm_yaw.init();
     pwm_yaw.set_freq(50);
     // pwm_yaw.set_duty_cycle(50);
-    pwm_yaw.set_duty_cycle_us(1500);
+    pwm_yaw.set_duty_cycle_us(YAW_STOP);
     // 1530 = stop, or just stop the pwm
     pwm_yaw.set_enabled(true);
 
@@ -215,13 +348,19 @@ int main()
 
         
         float distance = tof_measure_distance();
-        printf("%f\n", distance);
-        if (distance < CALIB_STAND_VAL){
-            printf("FOUND STAND\n");
-        }
+        //printf("%f\n", distance);
+        // if (distance < CALIB_STAND_VAL){
+        //     printf("FOUND STAND\n");
+        // }
         sleep_ms(50);
-        pwm_pitch.set_duty_cycle_us(pitch_setpoint);
-        pwm_yaw.set_duty_cycle_us(yaw_setpoint);
+        readSerial();
+        if(calibration){
+           bool res = calibrate_yaw(pwm_yaw, pwm_pitch, CALIB_STAND_VAL);
+           printf("calibration exited with - %d", res);
+           calibration = false;
+        }
+        // pwm_pitch.set_duty_cycle_us(pitch_setpoint);
+        // pwm_yaw.set_duty_cycle_us(yaw_setpoint);
         
     }
 }
