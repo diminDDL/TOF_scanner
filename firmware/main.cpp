@@ -80,32 +80,6 @@ uint pitch_to_us(float pitch)
 uint pitch_setpoint = 1500;
 uint yaw_setpoint = 1500;
 
-void core1()
-{
-    while (true)
-    {
-        sleep_ms(500);
-        //printf("-30.0\n");
-        pitch_setpoint = pitch_to_us(-40.0);
-        sleep_ms(500);
-        yaw_setpoint = (1510);
-        sleep_ms(1000);
-        yaw_setpoint = (1485);
-        sleep_ms(1000);
-        yaw_setpoint = (1500);
-        sleep_ms(1000);
-        //printf("0.0\n");
-        pitch_setpoint = pitch_to_us(0.0);
-        sleep_ms(500);
-        //printf("90.0\n");
-        pitch_setpoint = pitch_to_us(90.0);
-        sleep_ms(500);
-        //printf("180.0\n");
-        pitch_setpoint = pitch_to_us(180.0);
-        sleep_ms(2000);
-    }
-}
-
 bool calibration = false;
 
 void initiateCalibration() {
@@ -121,22 +95,42 @@ void initiateEstop() {
 
 void getCurrentDistanceMeasurement() {
     // Implement distance measurement retrieval
-    printf("Distance measurement: 0.0\n");
+    printf("Distance measurement: %f\n", tof_measure_distance());
 }
 
-void setScanResolution(float resolution) {
+void setScanResolution(int resolution) {
+    if(resolution < 1 || resolution > 10){
+        printf("Invalid resolution: %d, range is 1 - 10\n", resolution);
+        return;
+    }
+    points_per_deg = resolution;
     // Implement scan resolution setting
-    printf("Scan resolution set to: %f\n", resolution);
+    printf("Scan resolution set to: %d\n", resolution);
 }
 
 void setScanAngleYaw(float angle) {
+    if(angle < 10.0 || angle > 360.0){
+        printf("Invalid angle: %f, range is 10.0 - 360.0\n", angle);
+        return;
+    }
     // Implement scan angle setting on yaw axis
     printf("Scan angle set to: %f\n", angle);
+    deg_yaw = angle;
 }
 
 void setScanAnglePitch(float angle) {
+    if(angle < 1.0 || angle > 180.0){
+        printf("Invalid angle: %f, range is 1.0 - 180.0\n", angle);
+        return;
+    }
     // Implement scan angle setting on pitch axis
     printf("Scan angle set to: %f\n", angle);
+    deg_pitch = angle;
+}
+
+void startScan() {
+    scan_in_progress = true;
+    printf("Scan started\n");
 }
 
 void processCommand(char* fullCommand){
@@ -150,11 +144,13 @@ void processCommand(char* fullCommand){
     } else if (strcmp(command, "gdis") == 0) {
         getCurrentDistanceMeasurement();
     } else if (strcmp(command, "scres") == 0 && arg != NULL) {
-        setScanResolution(atof(arg));
+        setScanResolution(atoi(arg));
     } else if (strcmp(command, "scyaw") == 0 && arg != NULL) {
         setScanAngleYaw(atof(arg));
     } else if (strcmp(command, "scpitc") == 0 && arg != NULL) {
         setScanAnglePitch(atof(arg));
+    } else if (strcmp(command, "scstart") == 0) {
+        startScan();
     } else {
         printf("Invalid command or missing argument: %s\n", fullCommand);
     }
@@ -207,6 +203,7 @@ float average_tof_distance(uint samples){
 // and in which direction to do so, so we need to use these for the actual measurements
 uint unit_steps_per_rev = 0;
 bool unit_dir = true;
+float deg_per_unit_step = 0.0;
 bool calibrate_yaw(PWM &pwm_yaw, PWM &pwm_pitch, float threshold){
     // position the pitch to it's minimum
     pwm_pitch.set_duty_cycle_us(pitch_to_us(-1.0 * PITCH_OFFSET + 10));
@@ -353,8 +350,17 @@ bool calibrate_yaw(PWM &pwm_yaw, PWM &pwm_pitch, float threshold){
     printf("steps: %d\n", steps);
     unit_steps_per_rev = steps;
     unit_dir = dir;
-    // TODO: finish the time measurement to get a deg to us conversion
+    deg_per_unit_step = 360.0 / (float)steps;
     return true;
+}
+
+void core1()
+{
+    while (true)
+    {
+        readSerial();
+        sleep_ms(50);
+    }
 }
 
 int main()
@@ -426,6 +432,11 @@ int main()
 
     sleep_ms(10);
 
+    bool calibrated = false; 
+
+    float current_yaw = 0.0;
+    float current_pitch = 0.0;
+
     while (true)
     {
 
@@ -433,17 +444,61 @@ int main()
         // deg_yaw(float);deg_pitch(float);points_deg(int)\n
 
         
-        float distance = tof_measure_distance();
+        // float distance = tof_measure_distance();
         //printf("%f\n", distance);
         // if (distance < CALIB_STAND_VAL){
         //     printf("FOUND STAND\n");
         // }
         sleep_ms(50);
-        readSerial();
+        //readSerial();
         if(calibration){
-           bool res = calibrate_yaw(pwm_yaw, pwm_pitch, CALIB_STAND_VAL);
-           printf("calibration exited with - %d", res);
+           calibrated = calibrate_yaw(pwm_yaw, pwm_pitch, CALIB_STAND_VAL);
            calibration = false;
+        }
+        if(scan_in_progress && calibrated){
+            // position the pitch to it's minimum
+            pwm_pitch.set_duty_cycle_us(pitch_to_us(-1.0 * PITCH_OFFSET + 10));
+            for(uint i = 0; i < unit_steps_per_rev; i++){
+                for(uint j = 0; j < (deg_pitch / points_per_deg); j++){
+                    // set the pitch
+                    pwm_pitch.set_duty_cycle_us(pitch_to_us(-1.0 * PITCH_OFFSET + (float)j * points_per_deg));
+                    // wait for the servo to move
+                    sleep_ms(50);
+                    // read the distance
+                    float distance = average_tof_distance(AVG_SAMPLES);
+                    // calculate the current pitch in degrees
+                    current_pitch = -1.0 * PITCH_OFFSET + (float)j * points_per_deg;
+                    // print the values
+                    printf("%f;%f;%f\n", current_pitch, current_yaw, distance);
+                }
+                if(unit_dir){
+                    pwm_yaw.set_duty_cycle_us(YAW_STOP - BASE_YAW_STEP);
+                }else{
+                    pwm_yaw.set_duty_cycle_us(YAW_STOP + BASE_YAW_STEP);
+                }
+                // wait for the servo to move
+                sleep_ms(BASE_YAW_DELAY);
+                // stop the servo
+                pwm_yaw.set_duty_cycle_us(YAW_STOP);
+                // wait for the servo to stop
+                sleep_ms(BASE_YAW_DELAY);
+
+                if(current_yaw > deg_yaw){
+                    break;
+                }
+
+                // calculate the current yaw in degrees
+                if(unit_dir){
+                    current_yaw = deg_per_unit_step * (float)i;
+                }else{
+                    current_yaw -= deg_per_unit_step * (float)i;
+                }
+            }
+
+            scan_in_progress = false;
+        }else if(scan_in_progress){
+            printf("Calibration not complete\n");
+            scan_in_progress = false;
         }
         // pwm_pitch.set_duty_cycle_us(pitch_setpoint);
         // pwm_yaw.set_duty_cycle_us(yaw_setpoint);
