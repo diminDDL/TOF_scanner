@@ -14,9 +14,12 @@
 #include "lib/pwm.hpp"
 
 #define PITCH_OFFSET 40.0
-#define CALIB_STAND_VAL 0.19
-#define YAW_STOP 1498
-
+#define CALIB_STAND_VAL 0.16
+#define YAW_STOP 1495
+#define BASE_YAW_STEP 20
+#define BASE_YAW_DELAY 50
+#define PITCH_STOP 1500
+#define AVG_SAMPLES 5
 
 const uint sda_pin = 12;
 const uint scl_pin = 13;
@@ -191,10 +194,22 @@ void readSerial(bool update = true){
     }
 }
 
+float average_tof_distance(uint samples){
+    float sum = 0.0;
+    for(uint i = 0; i < samples; i++){
+        sum += tof_measure_distance();
+    }
+    return sum / (float)samples;
+}
 
+// because of the stupid continuous "servo" it's impossible to have repeatable motion in both directions
+// so we have to calibrate the yaw servo to find out how many steps it takes to get to the ledge
+// and in which direction to do so, so we need to use these for the actual measurements
+uint unit_steps_per_rev = 0;
+bool unit_dir = true;
 bool calibrate_yaw(PWM &pwm_yaw, PWM &pwm_pitch, float threshold){
     // position the pitch to it's minimum
-    pwm_pitch.set_duty_cycle_us(pitch_to_us(-1.0 * PITCH_OFFSET));
+    pwm_pitch.set_duty_cycle_us(pitch_to_us(-1.0 * PITCH_OFFSET + 10));
     // tell the user to move yaw close to the calibration ledge
     printf("Move yaw to the calibration ledge\n");
     // wait for the user to move the yaw to the calibration ledge, user will send 'done' when ready
@@ -207,8 +222,9 @@ bool calibrate_yaw(PWM &pwm_yaw, PWM &pwm_pitch, float threshold){
         }
         tight_loop_contents();
     }
-    uint step_size = 20;
-    uint step_delay = 25;
+    bool dir = true;
+    uint step_size = BASE_YAW_STEP;
+    uint step_delay = BASE_YAW_DELAY;
     uint step_timeout = 15;
     // now we move yaw to the left until we hit the ledge or timeout if we timeout, we start turning right
     // until we hit the ledge or timeout, if we timeout again, we return false
@@ -223,7 +239,7 @@ bool calibrate_yaw(PWM &pwm_yaw, PWM &pwm_pitch, float threshold){
         // wait for the servo to stop
         sleep_ms(step_delay);
         // read the distance
-        float distance = tof_measure_distance();
+        float distance = average_tof_distance(AVG_SAMPLES);
         printf("moving left: %f\n", distance);
         // if we are close enough to the ledge, we are done
         if(distance < threshold){
@@ -239,6 +255,7 @@ bool calibrate_yaw(PWM &pwm_yaw, PWM &pwm_pitch, float threshold){
     }
     // if we timed out, we start turning right
     if(step_timeout == 0){
+        dir = false;
         step_timeout = 30;
         // now we move yaw to the right until we hit the ledge or timeout if we timeout, we return false
         // if we hit the ledge, we continue the calibration process
@@ -252,7 +269,7 @@ bool calibrate_yaw(PWM &pwm_yaw, PWM &pwm_pitch, float threshold){
             // wait for the servo to stop
             sleep_ms(step_delay);
             // read the distance
-            float distance = tof_measure_distance();
+            float distance = average_tof_distance(AVG_SAMPLES);
             printf("moving right: %f\n", distance);
             // if we are close enough to the ledge, we are done
             if(distance < threshold){
@@ -267,6 +284,75 @@ bool calibrate_yaw(PWM &pwm_yaw, PWM &pwm_pitch, float threshold){
             step_timeout--;
         }
     }
+    // now we move into th the opposite direction until we hit the ledge again, recording how many steps it took
+    // to get there
+    uint steps = 0;
+    step_timeout = 500;
+    // first we move until we stop seeing the ledge
+    while(true){
+        // move the yaw to the left
+        if(dir){
+            pwm_yaw.set_duty_cycle_us(YAW_STOP - step_size);
+        }else{
+            pwm_yaw.set_duty_cycle_us(YAW_STOP + step_size);
+        }
+        // wait for the servo to move
+        sleep_ms(step_delay);
+        // stop the servo
+        pwm_yaw.set_duty_cycle_us(YAW_STOP);
+        // wait for the servo to stop
+        sleep_ms(step_delay);
+        // read the distance
+        float distance = average_tof_distance(AVG_SAMPLES);
+        printf("moving %s: %f\n", dir ? "left" : "right", distance);
+        // if we are far enough from the ledge, we are done
+        if(distance > threshold){
+            printf("LOST STAND\n");
+            break;
+        }
+        // if we have timed out, we return false
+        if(step_timeout == 0){
+            return false;
+        }
+        // decrement the timeout
+        step_timeout--;
+        // increment the steps
+        steps++;
+    }
+    // then we move until we see the ledge again
+    while(true){
+        // move the yaw to the right
+        if(dir){
+            pwm_yaw.set_duty_cycle_us(YAW_STOP - step_size);
+        }else{
+            pwm_yaw.set_duty_cycle_us(YAW_STOP + step_size);
+        }
+        // wait for the servo to move
+        sleep_ms(step_delay);
+        // stop the servo
+        pwm_yaw.set_duty_cycle_us(YAW_STOP);
+        // wait for the servo to stop
+        sleep_ms(step_delay);
+        // read the distance
+        float distance = average_tof_distance(AVG_SAMPLES);
+        printf("moving %s: %f\n", dir ? "left" : "right", distance);
+        // if we are close enough to the ledge, we are done
+        if(distance < threshold){
+            printf("FOUND STAND\n");
+            break;
+        }
+        // if we have timed out, we return false
+        if(step_timeout == 0){
+            return false;
+        }
+        // decrement the timeout
+        step_timeout--;
+        // increment the steps
+        steps++;
+    }
+    printf("steps: %d\n", steps);
+    unit_steps_per_rev = steps;
+    unit_dir = dir;
     // TODO: finish the time measurement to get a deg to us conversion
     return true;
 }
