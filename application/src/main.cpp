@@ -9,6 +9,7 @@
 #include <vector>
 #include <thread>
 #include <mutex>
+#include <unordered_map>
 #include <lib/serialib.h>
 #include <stdio.h>
 #define GL_SILENCE_DEPRECATION
@@ -40,18 +41,77 @@ char selected_port[24] = "Select port\0";
 
 char magic_symbol = 'A';
 
+enum class ScannerState {
+    CALIBRATING,        // "FOUND STAND" || "LOST STAND" || "moving left: <float>" || "moving right: <float>" in serial
+    POSITIONING,        // asking to move to the calibration ledge "Calibration initiated" string in serial
+    READY,              // "steps: <int>" in serial
+    SCANNING,           // "Scan started" in serial
+    COMPLETE            // "Scan complete" in serial
+};
+
+struct SharedState {
+    ScannerState currentState;
+    uint resolution;
+    float yawAngle;
+    float pitchAngle;
+    uint currentPointIndex;
+    bool setNewState;
+
+    // Mutex for thread-safe access
+    std::mutex mutex;
+};
+
+bool StringToScannerState(const std::string& input, ScannerState* state) {
+    static const std::unordered_map<std::string, ScannerState> stringToState = {
+        {"FOUND STAND", ScannerState::CALIBRATING},
+        {"LOST STAND", ScannerState::CALIBRATING},
+        {"moving left:", ScannerState::CALIBRATING},
+        {"moving right:", ScannerState::CALIBRATING},
+        {"Calibration initiated", ScannerState::POSITIONING},
+        {"steps:", ScannerState::READY},
+        {"Scan started", ScannerState::SCANNING},
+        {"Scan complete", ScannerState::COMPLETE}
+    };
+
+    for (const auto& pair : stringToState) {
+        if (input.find(pair.first) != std::string::npos) {
+            if (state != nullptr) {
+                *state = pair.second;
+            }
+            return true;
+        }
+    }
+
+    return false;
+}
+
 std::mutex serialDlMutex;
 double deltaSerialTime = 0.0; // time between two screenshots
+SharedState scanner;
 void SerialThread()
 {
     serialib device;
-    // auto lastStart = std::chrono::system_clock::now();
     while (true)
     {
         if (device.openDevice(selected_port, 115200) == 1)
         {
             // bool new_data = false;
-            std::vector<uint8_t> data;
+            std::vector<uint8_t> rx_data;
+            std::vector<uint8_t> tx_data;
+            while(true){
+                char read = 0;
+                device.readChar(&read);
+                if(read != 0){
+                    rx_data.push_back(read);
+                }
+                // check if rx_data ends with a \r\n
+                if(rx_data.size() > 1 && rx_data[rx_data.size() - 1] == '\n'){
+                    scanner.mutex.lock();
+                    // check if it matches any of the commands
+                }
+
+
+            }
             // while(true){
             //     newDataMutex.lock();
             //     new_data = newData;

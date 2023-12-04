@@ -494,6 +494,8 @@ int main()
                     current_yaw -= deg_per_unit_step * (float)i;
                 }
             }
+            // scan complete
+            printf("Scan complete\n");
 
             scan_in_progress = false;
         }else if(scan_in_progress){
