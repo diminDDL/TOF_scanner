@@ -6,9 +6,13 @@
 #include <thread>
 #include <cstdint>
 #include <cstring>
+#include <iostream>
+#include <string>
 #include <vector>
 #include <thread>
 #include <mutex>
+#include <iomanip>
+#include <sstream>
 #include <unordered_map>
 #include <lib/serialib.h>
 #include <stdio.h>
@@ -41,15 +45,18 @@ char selected_port[24] = "Select port\0";
 
 char magic_symbol = 'A';
 
-enum class ScannerState {
-    CALIBRATING,        // "FOUND STAND" || "LOST STAND" || "moving left: <float>" || "moving right: <float>" in serial
-    POSITIONING,        // asking to move to the calibration ledge "Calibration initiated" string in serial
-    READY,              // "steps: <int>" in serial
-    SCANNING,           // "Scan started" in serial
-    COMPLETE            // "Scan complete" in serial
+enum class ScannerState
+{
+    UNKNOWN = 0, // state not yet known
+    POSITIONING, // asking to move to the calibration ledge "Calibration initiated" string in serial
+    CALIBRATING, // "FOUND STAND" || "LOST STAND" || "moving left: <float>" || "moving right: <float>" in serial
+    READY,       // "steps: <int>" in serial
+    SCANNING,    // "Scan started" in serial
+    COMPLETE     // "Scan complete" in serial
 };
 
-struct SharedState {
+struct SharedState
+{
     ScannerState currentState;
     uint resolution;
     float yawAngle;
@@ -57,11 +64,16 @@ struct SharedState {
     uint currentPointIndex;
     bool setNewState;
 
+    // String with the messages for the user
+    std::string message;
+
     // Mutex for thread-safe access
     std::mutex mutex;
 };
 
-bool StringToScannerState(const std::string& input, ScannerState* state) {
+bool StringToScannerState(const std::string &input, ScannerState *state)
+{
+    std::cout << "looking up state for: " << input << std::endl << "Current state: " << (int)*state << std::endl;
     static const std::unordered_map<std::string, ScannerState> stringToState = {
         {"FOUND STAND", ScannerState::CALIBRATING},
         {"LOST STAND", ScannerState::CALIBRATING},
@@ -70,19 +82,58 @@ bool StringToScannerState(const std::string& input, ScannerState* state) {
         {"Calibration initiated", ScannerState::POSITIONING},
         {"steps:", ScannerState::READY},
         {"Scan started", ScannerState::SCANNING},
-        {"Scan complete", ScannerState::COMPLETE}
-    };
+        {"Scan complete", ScannerState::COMPLETE}};
 
-    for (const auto& pair : stringToState) {
-        if (input.find(pair.first) != std::string::npos) {
-            if (state != nullptr) {
+    for (const auto &pair : stringToState)
+    {
+        if (input.find(pair.first) != std::string::npos)
+        {
+            if (state != nullptr)
+            {
                 *state = pair.second;
             }
+            std::cout << "Found state: " << (int)pair.second << std::endl;
             return true;
         }
     }
 
     return false;
+}
+
+std::string GenerateCommand(ScannerState currentState, int resolution, float yaw, float pitch)
+{
+    std::ostringstream command;
+    // print out the arguments we received
+    std::cout << "Current state: " << (int)currentState << std::endl;
+    std::cout << "Resolution: " << resolution << std::endl;
+    std::cout << "Yaw: " << yaw << std::endl;
+    std::cout << "Pitch: " << pitch << std::endl;
+
+    switch (currentState)
+    {
+    case ScannerState::UNKNOWN:
+        // Transition from UNKNOWN to READY
+        command << "calib\r\n";
+        break;
+
+    case ScannerState::POSITIONING:
+        // Transition from UNKNOWN to POSITIONING
+        command << "done\r\n";
+        break;
+    case ScannerState::READY:
+        // Transition from READY to SCANNING
+        command << "scres " << resolution << "\r\n";
+        command << "scyaw " << std::fixed << std::setprecision(2) << yaw << "\r\n";
+        command << "scpitc " << std::fixed << std::setprecision(2) << pitch << "\r\n";
+        command << "scstart\r\n";
+        break;
+    default:
+        // For all other cases we have nothing
+        command << "";
+        break;
+    }
+
+    return command.str();
 }
 
 std::mutex serialDlMutex;
@@ -95,21 +146,51 @@ void SerialThread()
     {
         if (device.openDevice(selected_port, 115200) == 1)
         {
+            std::cout << "Opened port" << std::endl;
             // bool new_data = false;
             std::vector<uint8_t> rx_data;
             std::vector<uint8_t> tx_data;
-            while(true){
+            while (true)
+            {
                 char read = 0;
-                device.readChar(&read);
-                if(read != 0){
+                device.readChar(&read, 2);
+                if (read != 0)
+                {
                     rx_data.push_back(read);
+                    std::cout << read;
                 }
                 // check if rx_data ends with a \r\n
-                if(rx_data.size() > 1 && rx_data[rx_data.size() - 1] == '\n'){
+                if (rx_data.size() > 1 && rx_data[rx_data.size() - 1] == '\n')
+                {
                     scanner.mutex.lock();
                     // check if it matches any of the commands
+                    
+                    std::cout << "Testing for state advance: " << std::endl;
+                    std::string rx_string(rx_data.begin(), rx_data.end());
+                    std::cout << rx_string << std::endl;
+                    if (StringToScannerState(rx_string, &scanner.currentState))
+                    {
+                        std::cout << "New state found: " << (int)scanner.currentState << std::endl;
+                    }
+                    scanner.message = rx_string;
+                    scanner.mutex.unlock();
+                    rx_data.clear();
+                    device.flushReceiver();
                 }
-
+                scanner.mutex.lock();
+                bool setNewState = scanner.setNewState;
+                scanner.setNewState = false;
+                scanner.mutex.unlock();
+                if (setNewState)
+                {
+                    std::cout << "New state" << std::endl;
+                    // generate the command
+                    std::string command = GenerateCommand(scanner.currentState, scan_resolution, scanner.yawAngle, scanner.pitchAngle);
+                    std::cout << command << std::endl;
+                    // send the command
+                    device.writeBytes(command.c_str(), command.size());
+                    device.flushReceiver();
+                }
 
             }
             // while(true){
@@ -506,8 +587,6 @@ void guiThread()
             glViewport(0, 0, size.x, size.y);
             glClearColor(color[0], color[1], color[2], color[3]);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            
-            
 
             if (freq != old_freq)
             {
@@ -622,111 +701,161 @@ void guiThread()
         }
         else
         {
-            first_start = false;
+            // TODO make this false after calibration and after starting a scan
+            // first_start = false;
             ImGuiWindowFlags window_flags = 0;
             window_flags |= ImGuiWindowFlags_NoTitleBar;
             window_flags |= ImGuiWindowFlags_NoResize;
             window_flags |= ImGuiWindowFlags_NoMove;
             window_flags |= ImGuiWindowFlags_NoScrollbar;
 
+            scanner.mutex.lock();
+            ScannerState currentState = scanner.currentState;
+            scanner.mutex.unlock();
+
             ImGui::Begin("TOF Mapper config", NULL, window_flags);
 
-            // define the size of the subwindow
-            ImGui::SetWindowSize(ImVec2(300, 230));
-            if (window_width > 300 && window_height > 200)
-                ImGui::SetWindowPos(ImVec2((window_width / 2) - 150, (window_height / 2) - 100));
-
-            // Add a slider to define the resolution of the scan
-            
-            ImGui::SetCursorPosX((300 - 100) / 2);
-            ImGui::Text("Scan resolution\n(points per degree)");
-            ImGui::SetCursorPosX((300 - 100) / 4);
-            ImGui::SliderInt("##Scan resolution", &scan_resolution, 1, 20);
-            // Add a sliders for the horizontal and vertical angle of the scan (in degrees)
-            
-            ImGui::SetCursorPosX((300 - 100) / 2);
-            ImGui::Text("Horizontal angle");
-            ImGui::SetCursorPosX((300 - 100) / 4);
-            ImGui::SliderInt("##Horizontal angle", &horizontal_angle, 1, 360);
-            
-            ImGui::SetCursorPosX((300 - 100) / 2);
-            ImGui::Text("Vertical angle");
-            ImGui::SetCursorPosX((300 - 100) / 4);
-            ImGui::SliderInt("##Vertical angle", &vertical_angle, 1, 120);
-
-            // insert some padding
-            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 20);
-
-            static char *items[99] = {0};
-            static int item_current = -1; // If the selection isn't within 0..count, Combo won't display a preview
-            ImGui::PushItemWidth(150);
-            // ImGui::Combo("##PortSelector", &item_current, items, IM_ARRAYSIZE(items));
-            if (ImGui::BeginCombo("##PortSelector", selected_port))
+            switch (currentState)
             {
-                for (int n = 0; n < IM_ARRAYSIZE(items); n++)
-                {
-                    const bool is_selected = (item_current == n);
-                    if (items[n] != NULL)
-                    {
-                        if (ImGui::Selectable(items[n], is_selected))
-                        {
-                            item_current = n;
-                            strcpy(selected_port, items[n]);
-                        }
+            case ScannerState::UNKNOWN:
+                // define the size of the subwindow
+                ImGui::SetWindowSize(ImVec2(300, 300));
+                if (window_width > 300 && window_height > 200)
+                    ImGui::SetWindowPos(ImVec2((window_width / 2) - 150, (window_height / 2) - 100));
 
-                        // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
-                        if (is_selected)
+                // Add a label stating the current state
+                ImGui::SetCursorPosX((300 - 100) / 2);
+                ImGui::Text("State: ");
+                ImGui::SameLine();
+                ImGui::TextColored(ImVec4(1, 0, 0, 1), "UNKNOWN");
+                // insert some padding
+                ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 20);
+
+                // Add a slider to define the resolution of the scan
+                ImGui::SetCursorPosX((300 - 100) / 2);
+                ImGui::Text("Scan resolution\n(points per degree)");
+                ImGui::SetCursorPosX((300 - 100) / 4);
+                ImGui::SliderInt("##Scan resolution", &scan_resolution, 1, 20);
+                // Add a sliders for the horizontal and vertical angle of the scan (in degrees)
+
+                ImGui::SetCursorPosX((300 - 100) / 2);
+                ImGui::Text("Horizontal angle");
+                ImGui::SetCursorPosX((300 - 100) / 4);
+                ImGui::SliderInt("##Horizontal angle", &horizontal_angle, 1, 360);
+
+                ImGui::SetCursorPosX((300 - 100) / 2);
+                ImGui::Text("Vertical angle");
+                ImGui::SetCursorPosX((300 - 100) / 4);
+                ImGui::SliderInt("##Vertical angle", &vertical_angle, 1, 120);
+
+                // insert some padding
+                ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 20);
+
+                static char *items[99] = {0};
+                static int item_current = -1; // If the selection isn't within 0..count, Combo won't display a preview
+                ImGui::PushItemWidth(150);
+                // ImGui::Combo("##PortSelector", &item_current, items, IM_ARRAYSIZE(items));
+                if (ImGui::BeginCombo("##PortSelector", selected_port))
+                {
+                    for (int n = 0; n < IM_ARRAYSIZE(items); n++)
+                    {
+                        const bool is_selected = (item_current == n);
+                        if (items[n] != NULL)
                         {
-                            ImGui::SetItemDefaultFocus();
+                            if (ImGui::Selectable(items[n], is_selected))
+                            {
+                                item_current = n;
+                                strcpy(selected_port, items[n]);
+                            }
+
+                            // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+                            if (is_selected)
+                            {
+                                ImGui::SetItemDefaultFocus();
+                            }
                         }
                     }
+                    ImGui::EndCombo();
                 }
-                ImGui::EndCombo();
-            }
-            // std::cout << selected_port << std::endl;
+                // std::cout << selected_port << std::endl;
 
-            ImGui::SameLine();
+                ImGui::SameLine();
 
-            static bool scan = true;
-            char device_name[99][24];
-            if (scan)
-            {
-                scan = false;
-                serialib device;
-                for (int i = 0; i < 98; i++)
+                static bool scan = true;
+                char device_name[99][24];
+                if (scan)
                 {
+                    scan = false;
+                    serialib device;
+                    for (int i = 0; i < 98; i++)
+                    {
 // Prepare the port name (Windows)
 #if defined(_WIN32) || defined(_WIN64)
-                    sprintf(device_name[i], "\\\\.\\COM%d", i + 1);
+                        sprintf(device_name[i], "\\\\.\\COM%d", i + 1);
 #endif
 
 // Prepare the port name (Linux)
 #ifdef __linux__
-                    sprintf(device_name[i], "/dev/ttyACM%d", i);
+                        sprintf(device_name[i], "/dev/ttyACM%d", i);
 #endif
 
-                    // try to connect to the device
-                    if (device.openDevice(device_name[i], 115200) == 1)
-                    {
-                        // printf ("Device detected on %s\n", device_name[i]);
-                        // set the pointer to the array
-                        items[i] = device_name[i];
-                        // Close the device before testing the next port
-                        device.closeDevice();
-                    }
-                    else
-                    {
-                        items[i] = NULL;
+                        // try to connect to the device
+                        if (device.openDevice(device_name[i], 115200) == 1)
+                        {
+                            // printf ("Device detected on %s\n", device_name[i]);
+                            // set the pointer to the array
+                            items[i] = device_name[i];
+                            // Close the device before testing the next port
+                            device.closeDevice();
+                        }
+                        else
+                        {
+                            items[i] = NULL;
+                        }
                     }
                 }
+
+                scan = ImGui::Button("Scan", ImVec2(100, 20));
+
+                // center the button
+                ImGui::SetCursorPosX((300 - 100) / 2);
+                ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 20);
+                scanner.mutex.lock();
+                scanner.setNewState = ImGui::Button("Apply", ImVec2(100, 20));
+                scanner.mutex.unlock();
+
+                break;
+
+            case ScannerState::POSITIONING:
+                // define the size of the subwindow
+                ImGui::SetWindowSize(ImVec2(300, 300));
+                if (window_width > 300 && window_height > 200)
+                    ImGui::SetWindowPos(ImVec2((window_width / 2) - 150, (window_height / 2) - 100));
+
+                // Add a label stating the current state
+                ImGui::SetCursorPosX((300 - 100) / 2);
+                ImGui::Text("State: ");
+                ImGui::SameLine();
+                ImGui::TextColored(ImVec4(1, 1, 0, 1), "POSITIONING");
+                // insert some padding
+                ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 20);
+
+                // Display the message from the scanner
+                scanner.mutex.lock();
+                ImGui::Text(scanner.message.c_str());
+                scanner.mutex.unlock();
+
+                // show the user a button to press when the scanner is in position
+                ImGui::SetCursorPosX((300 - 100) / 2);
+                ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 20);
+                scanner.mutex.lock();
+                scanner.setNewState = ImGui::Button("Ready", ImVec2(100, 20));
+                scanner.mutex.unlock();
+
+                break;
+            default:
+                break;
             }
-
-            scan = ImGui::Button("Scan", ImVec2(100, 20));
-
-            // center the button
-            ImGui::SetCursorPosX((300 - 100) / 2);
-            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 20);
-            first_start = !ImGui::Button("Apply", ImVec2(100, 20));
 
             ImGui::End();
         }

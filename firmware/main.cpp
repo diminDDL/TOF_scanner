@@ -214,8 +214,6 @@ bool calibrate_yaw(PWM &pwm_yaw, PWM &pwm_pitch, float threshold){
         readSerial(false);
         if(strcmp(readBuff, "done\r\n") == 0){
             break;
-        }else{
-            printf(readBuff);
         }
         tight_loop_contents();
     }
