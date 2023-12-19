@@ -345,6 +345,7 @@ bool calibrate_yaw(PWM &pwm_yaw, PWM &pwm_pitch, float threshold){
         // increment the steps
         steps++;
     }
+    sleep_ms(50);
     printf("steps: %d\n", steps);
     unit_steps_per_rev = steps;
     unit_dir = dir;
@@ -456,6 +457,8 @@ int main()
         if(scan_in_progress && calibrated){
             // position the pitch to it's minimum
             pwm_pitch.set_duty_cycle_us(pitch_to_us(-1.0 * PITCH_OFFSET + 10));
+            uint progress = 0;
+            uint total_points = (uint)((deg_pitch / points_per_deg) * unit_steps_per_rev);  // TODO this is wrong
             for(uint i = 0; i < unit_steps_per_rev; i++){
                 for(uint j = 0; j < (deg_pitch / points_per_deg); j++){
                     // set the pitch
@@ -467,7 +470,8 @@ int main()
                     // calculate the current pitch in degrees
                     current_pitch = -1.0 * PITCH_OFFSET + (float)j * points_per_deg;
                     // print the values
-                    printf("%f;%f;%f\n", current_pitch, current_yaw, distance);
+                    printf("%f;%f;%f;%d;%d\n", current_pitch, current_yaw, distance, progress, total_points);
+                    progress++;
                 }
                 if(unit_dir){
                     pwm_yaw.set_duty_cycle_us(YAW_STOP - BASE_YAW_STEP);

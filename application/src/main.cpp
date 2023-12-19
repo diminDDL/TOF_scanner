@@ -84,6 +84,9 @@ bool StringToScannerState(const std::string &input, ScannerState *state)
         {"Scan started", ScannerState::SCANNING},
         {"Scan complete", ScannerState::COMPLETE}};
 
+    // TODO remove this
+    std::cout << "Checking state for string: " << input << std::endl;
+
     for (const auto &pair : stringToState)
     {
         if (input.find(pair.first) != std::string::npos)
@@ -165,7 +168,7 @@ void SerialThread()
                     scanner.mutex.lock();
                     // check if it matches any of the commands
                     
-                    std::cout << "Testing for state advance: " << std::endl;
+                    std::cout << "Testing for state advance: ";
                     std::string rx_string(rx_data.begin(), rx_data.end());
                     std::cout << rx_string << std::endl;
                     if (StringToScannerState(rx_string, &scanner.currentState))
@@ -222,7 +225,7 @@ void SerialThread()
         {
             // std::cout << "Failed to open device" << std::endl;
             // sleep chrono
-            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
     }
 }
@@ -496,8 +499,7 @@ void guiThread()
             ImGui::Begin("TOF GUI", NULL, window_flags); // Create a window and append into it.
             ImGui::SetWindowSize(ImVec2(window_width, window_height));
             ImGui::SetWindowPos(ImVec2(0, 0));
-            ImGui::Text("Welcome to TOF controller");          // Display some text (you can use a format strings too)
-            ImGui::Checkbox("Demo Window", &show_demo_window); // Edit bools storing our window open/close state
+            //ImGui::Checkbox("Demo Window", &show_demo_window); // Edit bools storing our window open/close state
             ImGui::ColorEdit3("Color", (float *)&clear_color); // Edit 3 floats representing a color
             // ImGui::Text("Application average (%.1f FPS)", io.Framerate);
             char fps_buf[64];
@@ -853,6 +855,32 @@ void guiThread()
                 scanner.mutex.unlock();
 
                 break;
+
+            case ScannerState::CALIBRATING:
+                // define the size of the subwindow
+                ImGui::SetWindowSize(ImVec2(300, 300));
+                if (window_width > 300 && window_height > 200)
+                    ImGui::SetWindowPos(ImVec2((window_width / 2) - 150, (window_height / 2) - 100));
+
+                // Add a label stating the current state
+                ImGui::SetCursorPosX((300 - 100) / 2);
+                ImGui::Text("State: ");
+                ImGui::SameLine();
+                ImGui::TextColored(ImVec4(1, 0, 1, 1), "CALIBRATING");
+                // insert some padding
+                ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 20);
+
+                // Display the message from the scanner
+                scanner.mutex.lock();
+                ImGui::Text(scanner.message.c_str());
+                scanner.mutex.unlock(); 
+
+                break;
+
+            case ScannerState::READY:
+                first_start = false;
+                break;
+            
             default:
                 break;
             }
