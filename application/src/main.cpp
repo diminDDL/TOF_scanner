@@ -500,7 +500,7 @@ void guiThread()
             ImGui::SetWindowSize(ImVec2(window_width, window_height));
             ImGui::SetWindowPos(ImVec2(0, 0));
             //ImGui::Checkbox("Demo Window", &show_demo_window); // Edit bools storing our window open/close state
-            ImGui::ColorEdit3("Color", (float *)&clear_color); // Edit 3 floats representing a color
+            //ImGui::ColorEdit3("Color", (float *)&clear_color); // Edit 3 floats representing a color
             // ImGui::Text("Application average (%.1f FPS)", io.Framerate);
             char fps_buf[64];
             sprintf(fps_buf, "Current FPS: %f", ImGui::GetIO().Framerate);
