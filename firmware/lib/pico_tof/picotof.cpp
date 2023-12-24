@@ -34,7 +34,7 @@ void double_to_bytes(double AVG, uint8_t* EXP, uint8_t* MSB, uint8_t* LSB);
 void double_to_bytes(double AVG, uint8_t* MSB, uint8_t* LSB);
 
 
-void tof_init(i2c_inst_t *i2c, uint irq_pin, uint ss_pin)
+bool tof_init(i2c_inst_t *i2c, uint irq_pin, uint ss_pin, bool read_calib)
 {
     tof_i2c = i2c;
     tof_irq_pin = irq_pin;
@@ -79,6 +79,10 @@ void tof_init(i2c_inst_t *i2c, uint irq_pin, uint ss_pin)
         printf("ISL29501 configured\n");
     }
 
+    if(!read_calib){
+        return ret;
+    }
+
 	ret = tof_read_calibration_user();
     if (ret == 0)
     {
@@ -88,6 +92,17 @@ void tof_init(i2c_inst_t *i2c, uint irq_pin, uint ss_pin)
     {
         printf("Calibration read from EEPROM\n");
     }
+
+    ret = write_isl();
+    if (ret == 0)
+    {
+        printf("Failed to write calibration to ISL29501\n");
+    }
+    else
+    {
+        printf("Calibration written to ISL29501\n");
+    }
+    return ret;
 }
 
 
@@ -115,6 +130,10 @@ double tof_measure_distance()
     ret &= ISL29501_Read(tof_i2c, isl29501_addr, 0xD2, &DistanceLSB, 1);
 
     distance =(((double)DistanceMSB * 256 + (double)DistanceLSB)/65536) * 33.31;
+    if(DistanceMSB == 0 && DistanceLSB == 0)
+    {
+        distance = 9999.0;
+    }
     return  distance;
 }
 

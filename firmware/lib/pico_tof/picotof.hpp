@@ -27,7 +27,7 @@ typedef struct _SERIALNODATA {
     uint8_t dummy[2]; // To align to 16 bytes
 } __attribute__((__packed__)) SERIALNODATA;
 
-void tof_init(i2c_inst_t *i2c, uint irq_pin, uint ss_pin);
+bool tof_init(i2c_inst_t *i2c, uint irq_pin, uint ss_pin,  bool read_calib);
 double tof_measure_distance();
 uint8_t tof_calibrate(double actual_distance);
 uint8_t tof_save_calibration_user();

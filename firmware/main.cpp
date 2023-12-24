@@ -14,7 +14,7 @@
 #include "lib/pwm.hpp"
 
 #define PITCH_OFFSET 40.0
-#define CALIB_STAND_VAL 0.16
+#define CALIB_STAND_VAL 0.18f
 #define YAW_STOP 1495
 #define BASE_YAW_STEP 20
 #define BASE_YAW_DELAY 50
@@ -210,6 +210,7 @@ bool calibrate_yaw(PWM &pwm_yaw, PWM &pwm_pitch, float threshold){
     // tell the user to move yaw close to the calibration ledge
     printf("Move yaw to the calibration ledge\n");
     // wait for the user to move the yaw to the calibration ledge, user will send 'done' when ready
+    pwm_yaw.set_duty_cycle_us(0);
     while(true){
         readSerial(false);
         if(strcmp(readBuff, "done\r\n") == 0){
@@ -237,7 +238,7 @@ bool calibrate_yaw(PWM &pwm_yaw, PWM &pwm_pitch, float threshold){
         float distance = average_tof_distance(AVG_SAMPLES);
         printf("moving left: %f\n", distance);
         // if we are close enough to the ledge, we are done
-        if(distance < threshold){
+        if(distance <= threshold){
             printf("FOUND STAND\n");
             break;
         }
@@ -267,12 +268,13 @@ bool calibrate_yaw(PWM &pwm_yaw, PWM &pwm_pitch, float threshold){
             float distance = average_tof_distance(AVG_SAMPLES);
             printf("moving right: %f\n", distance);
             // if we are close enough to the ledge, we are done
-            if(distance < threshold){
+            if(distance <= threshold){
                 printf("FOUND STAND\n");
                 break;
             }
             // if we have timed out, we return false
             if(step_timeout == 0){
+                printf("COULD NOT FIND STAND RETRY\n");
                 return false;
             }
             // decrement the timeout
@@ -332,7 +334,7 @@ bool calibrate_yaw(PWM &pwm_yaw, PWM &pwm_pitch, float threshold){
         float distance = average_tof_distance(AVG_SAMPLES);
         printf("moving %s: %f\n", dir ? "left" : "right", distance);
         // if we are close enough to the ledge, we are done
-        if(distance < threshold){
+        if(distance <= threshold){
             printf("FOUND STAND\n");
             break;
         }
@@ -427,7 +429,7 @@ int main()
     ISL29501_ReadDeviceID(i2c0, isl29501_addr);
 
     // try to initialize it and read it
-    tof_init(i2c0, irq_pin, ss_pin);
+    tof_init(i2c0, irq_pin, ss_pin, true);
 
     sleep_ms(10);
 
@@ -436,8 +438,16 @@ int main()
     float current_yaw = 0.0;
     float current_pitch = 0.0;
 
+    // while(true){
+    //     float dist = tof_measure_distance();
+    //     printf("%f\n", dist);
+    //     sleep_ms(10);
+    // }
+
     while (true)
     {
+
+        // TODO, reset pitch and yaw before measurements
 
         // read in the required angles and points per degree in the following format:
         // deg_yaw(float);deg_pitch(float);points_deg(int)\n
@@ -458,8 +468,9 @@ int main()
             // position the pitch to it's minimum
             pwm_pitch.set_duty_cycle_us(pitch_to_us(-1.0 * PITCH_OFFSET + 10));
             uint progress = 0;
-            uint total_points = (uint)((deg_pitch / points_per_deg) * unit_steps_per_rev);  // TODO this is wrong
-            for(uint i = 0; i < unit_steps_per_rev; i++){
+            // rough estimate of the total number of points
+            uint total_points = (uint)((deg_pitch / (float)points_per_deg) * (((float)(unit_steps_per_rev + 1) * (float)(deg_yaw + 1))/360.0f)); // TODO, test this
+            for(uint i = 1; i < unit_steps_per_rev; i++){
                 for(uint j = 0; j < (deg_pitch / points_per_deg); j++){
                     // set the pitch
                     pwm_pitch.set_duty_cycle_us(pitch_to_us(-1.0 * PITCH_OFFSET + (float)j * points_per_deg));
@@ -485,16 +496,18 @@ int main()
                 // wait for the servo to stop
                 sleep_ms(BASE_YAW_DELAY);
 
-                if(current_yaw > deg_yaw){
-                    break;
-                }
-
                 // calculate the current yaw in degrees
                 if(unit_dir){
                     current_yaw = deg_per_unit_step * (float)i;
                 }else{
                     current_yaw -= deg_per_unit_step * (float)i;
                 }
+
+                if(current_yaw > deg_yaw){
+                    printf("%f > %f\n", current_yaw, deg_yaw);
+                    break;
+                }
+
             }
             // scan complete
             printf("Scan complete\n");
