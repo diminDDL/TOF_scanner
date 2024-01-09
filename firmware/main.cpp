@@ -206,7 +206,7 @@ bool unit_dir = true;
 float deg_per_unit_step = 0.0;
 bool calibrate_yaw(PWM &pwm_yaw, PWM &pwm_pitch, float threshold){
     // position the pitch to it's minimum
-    pwm_pitch.set_duty_cycle_us(pitch_to_us(-1.0 * PITCH_OFFSET + 10));
+    pwm_pitch.set_duty_cycle_us(pitch_to_us(-1.0 * PITCH_OFFSET + PITCH_OFFSET));
     // tell the user to move yaw close to the calibration ledge
     printf("Move yaw to the calibration ledge\n");
     // wait for the user to move the yaw to the calibration ledge, user will send 'done' when ready
@@ -468,8 +468,12 @@ int main()
             // position the pitch to it's minimum
             pwm_pitch.set_duty_cycle_us(pitch_to_us(-1.0 * PITCH_OFFSET + 10));
             uint progress = 0;
+
+            // Initialize current_yaw based on unit_dir
+            current_yaw = (unit_dir) ? 0 : -deg_yaw;
+
             // rough estimate of the total number of points
-            uint total_points = (uint)((deg_pitch / (float)points_per_deg) * (((float)(unit_steps_per_rev + 1) * (float)(deg_yaw + 1))/360.0f)); // TODO, test this
+            uint total_points = (uint)((deg_pitch / (float)points_per_deg) * (((float)(unit_steps_per_rev + 1) * (float)(deg_yaw + 1))/360.0f)) + 1; // TODO, test this
             for(uint i = 1; i < unit_steps_per_rev; i++){
                 for(uint j = 0; j < (deg_pitch / points_per_deg); j++){
                     // set the pitch
@@ -484,6 +488,20 @@ int main()
                     printf("%f;%f;%f;%d;%d\n", current_pitch, current_yaw, distance, progress, total_points);
                     progress++;
                 }
+
+                if (unit_dir) {
+                    current_yaw += deg_per_unit_step;
+                    if (current_yaw > deg_yaw) {
+                        current_yaw = -deg_yaw; // Wrap around to the start of the range
+                    }
+                } else {
+                    current_yaw -= deg_per_unit_step;
+                    if (current_yaw < -deg_yaw) {
+                        current_yaw = deg_yaw; // Wrap around to the end of the range
+                    }
+                }
+
+                // Handling yaw movement and wrapping
                 if(unit_dir){
                     pwm_yaw.set_duty_cycle_us(YAW_STOP - BASE_YAW_STEP);
                 }else{
@@ -503,9 +521,13 @@ int main()
                     current_yaw -= deg_per_unit_step * (float)i;
                 }
 
-                if(current_yaw > deg_yaw){
+                if (unit_dir && current_yaw >= deg_yaw) {
                     printf("%f > %f\n", current_yaw, deg_yaw);
-                    break;
+                    break; // Break if we've reached or exceeded the positive limit
+                }
+                if (!unit_dir && current_yaw <= -deg_yaw) {
+                    printf("%f < %f\n", current_yaw, -deg_yaw);
+                    break; // Break if we've reached or exceeded the negative limit
                 }
 
             }
