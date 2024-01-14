@@ -41,6 +41,11 @@ static int scan_resolution = 1;
 static int vertical_angle = 90;
 static int horizontal_angle = 90;
 
+bool set_resolution = false;
+bool set_vertical_angle = false;
+bool set_horizontal_angle = false;
+bool start = false;
+
 char selected_port[24] = "Select port\0";
 
 char magic_symbol = 'A';
@@ -124,11 +129,16 @@ std::string GenerateCommand(ScannerState currentState, int resolution, float yaw
         command << "done\r\n";
         break;
     case ScannerState::READY:
+    // TODO re do this
         // Transition from READY to SCANNING
-        command << "scres " << resolution << "\r\n";
-        command << "scyaw " << std::fixed << std::setprecision(2) << yaw << "\r\n";
-        command << "scpitc " << std::fixed << std::setprecision(2) << pitch << "\r\n";
-        command << "scstart\r\n";
+        if(set_resolution)
+            command << "scres " << resolution << "\r\n";
+        if(set_horizontal_angle)
+            command << "scyaw " << std::fixed << std::setprecision(2) << yaw << "\r\n";
+        if(set_vertical_angle)
+            command << "scpitc " << std::fixed << std::setprecision(2) << pitch << "\r\n";
+        if(start)
+            command << "scstart\r\n";
         break;
     default:
         // For all other cases we have nothing
@@ -188,7 +198,7 @@ void SerialThread()
                 {
                     std::cout << "New state" << std::endl;
                     // generate the command
-                    std::string command = GenerateCommand(scanner.currentState, scan_resolution, scanner.yawAngle, scanner.pitchAngle);
+                    std::string command = GenerateCommand(scanner.currentState, scan_resolution, horizontal_angle, vertical_angle);
                     std::cout << command << std::endl;
                     // send the command
                     device.writeBytes(command.c_str(), command.size());
@@ -506,10 +516,6 @@ void guiThread()
             sprintf(fps_buf, "Current FPS: %f", ImGui::GetIO().Framerate);
             ImGui::Text(fps_buf);
 
-            char points_buf[64];
-            sprintf(points_buf, "Current Points: %i", X_MAX * Y_MAX);
-            ImGui::Text(points_buf);
-
             char mem_buf[64];
             float bandwith = (ImGui::GetIO().Framerate * 3 * X_MAX * Y_MAX * sizeof(float)) / (1000 * 1000);
             sprintf(mem_buf, "Current mem bandwith: %iMBps", (int)bandwith);
@@ -521,6 +527,31 @@ void guiThread()
 
             // insert some padding
             ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 20);
+
+            // Add a slider to define the resolution of the scan
+            ImGui::SetCursorPosX((300 - 100) / 2);
+            ImGui::Text("Scan resolution\n(points per degree)");
+            ImGui::SetCursorPosX((300 - 100) / 4);
+            ImGui::SliderInt("##Scan resolution", &scan_resolution, 1, 20);
+
+            set_resolution = ImGui::Button("Set resolution", ImVec2(100, 20));
+
+            // Add a sliders for the horizontal and vertical angle of the scan (in degrees)
+            ImGui::SetCursorPosX((300 - 100) / 2);
+            ImGui::Text("Horizontal angle");
+            ImGui::SetCursorPosX((300 - 100) / 4);
+            ImGui::SliderInt("##Horizontal angle", &horizontal_angle, 1, 360);
+
+            set_horizontal_angle = ImGui::Button("Set horizontal angle", ImVec2(100, 20));
+
+            ImGui::SetCursorPosX((300 - 100) / 2);
+            ImGui::Text("Vertical angle");
+            ImGui::SetCursorPosX((300 - 100) / 4);
+            ImGui::SliderInt("##Vertical angle", &vertical_angle, 1, 120);
+
+            set_vertical_angle = ImGui::Button("Set vertical angle", ImVec2(100, 20));
+
+            start = ImGui::Button("Start scan", ImVec2(100, 20));
 
             // Create a progress bar
             ImGui::Text("Scan Progress");
