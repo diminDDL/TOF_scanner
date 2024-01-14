@@ -41,10 +41,18 @@ static int scan_resolution = 1;
 static int vertical_angle = 90;
 static int horizontal_angle = 90;
 
-bool set_resolution = false;
-bool set_vertical_angle = false;
-bool set_horizontal_angle = false;
 bool start = false;
+
+bool generate_initial_settings = false;
+
+enum SettingsSendingProgress
+{
+    RESOLUTION,
+    HORIZONTAL_ANGLE,
+    VERTICAL_ANGLE,
+    START, 
+    DONE
+} settings_sending_progress = SettingsSendingProgress::RESOLUTION;
 
 char selected_port[24] = "Select port\0";
 
@@ -69,12 +77,24 @@ struct SharedState
     uint currentPointIndex;
     bool setNewState;
 
+    float currentYawAngle;
+    float currentPitchAngle;
+    float currentDistance;
+
+    uint currentPoint;
+    uint lastPoint;
+
+    bool newCurrentState = false;
+    
+
     // String with the messages for the user
     std::string message;
 
     // Mutex for thread-safe access
     std::mutex mutex;
 };
+
+SharedState scanner;
 
 bool StringToScannerState(const std::string &input, ScannerState *state)
 {
@@ -101,6 +121,11 @@ bool StringToScannerState(const std::string &input, ScannerState *state)
                 *state = pair.second;
             }
             std::cout << "Found state: " << (int)pair.second << std::endl;
+            // if the state is READY, we need to send out the resolution and angles
+            if (pair.second == ScannerState::READY)
+            {
+                generate_initial_settings = true;
+            }
             return true;
         }
     }
@@ -108,14 +133,24 @@ bool StringToScannerState(const std::string &input, ScannerState *state)
     return false;
 }
 
-std::string GenerateCommand(ScannerState currentState, int resolution, float yaw, float pitch)
+int valueProcessor(const std::string &input, SharedState *state)
+{
+    // parse the string
+    // -30.000000;-180.000000;0.340236;10;564\r\n
+    // yaw;pitch;distance;current_point;last_point
+    return sscanf(input.c_str(), "%f;%f;%*f;%*d;%*d",
+    &state->currentYawAngle, &state->currentPitchAngle,
+    &state->currentDistance, &state->currentPoint, &state->lastPoint);
+}
+
+std::string GenerateCommand(ScannerState currentState, int resolution, float yaw, float pitch, SharedState *state)
 {
     std::ostringstream command;
-    // print out the arguments we received
-    std::cout << "Current state: " << (int)currentState << std::endl;
-    std::cout << "Resolution: " << resolution << std::endl;
-    std::cout << "Yaw: " << yaw << std::endl;
-    std::cout << "Pitch: " << pitch << std::endl;
+    // // print out the arguments we received
+    // std::cout << "Current state: " << (int)currentState << std::endl;
+    // std::cout << "Resolution: " << resolution << std::endl;
+    // std::cout << "Yaw: " << yaw << std::endl;
+    // std::cout << "Pitch: " << pitch << std::endl;
 
     switch (currentState)
     {
@@ -129,16 +164,34 @@ std::string GenerateCommand(ScannerState currentState, int resolution, float yaw
         command << "done\r\n";
         break;
     case ScannerState::READY:
-    // TODO re do this
         // Transition from READY to SCANNING
-        if(set_resolution)
-            command << "scres " << resolution << "\r\n";
-        if(set_horizontal_angle)
-            command << "scyaw " << std::fixed << std::setprecision(2) << yaw << "\r\n";
-        if(set_vertical_angle)
-            command << "scpitc " << std::fixed << std::setprecision(2) << pitch << "\r\n";
-        if(start)
-            command << "scstart\r\n";
+        if(generate_initial_settings){
+            switch (settings_sending_progress)
+            {
+            case SettingsSendingProgress::RESOLUTION:
+                command << "scres " << resolution << "\r\n";
+                settings_sending_progress = HORIZONTAL_ANGLE;
+                state->resolution = resolution;
+                break;
+            case SettingsSendingProgress::HORIZONTAL_ANGLE:
+                command << "scyaw " << yaw << "\r\n";
+                settings_sending_progress = VERTICAL_ANGLE;
+                state->yawAngle = yaw;
+                break;
+            case SettingsSendingProgress::VERTICAL_ANGLE:
+                command << "scpitc " << pitch << "\r\n";
+                settings_sending_progress = START;
+                state->pitchAngle = pitch;
+                break;
+            case SettingsSendingProgress::START:
+                command << "scstart\r\n";
+                settings_sending_progress = DONE;
+                generate_initial_settings = false;
+                break;
+            default:
+                break;
+            }
+        }
         break;
     default:
         // For all other cases we have nothing
@@ -151,7 +204,6 @@ std::string GenerateCommand(ScannerState currentState, int resolution, float yaw
 
 std::mutex serialDlMutex;
 double deltaSerialTime = 0.0; // time between two screenshots
-SharedState scanner;
 void SerialThread()
 {
     serialib device;
@@ -185,6 +237,21 @@ void SerialThread()
                     {
                         std::cout << "New state found: " << (int)scanner.currentState << std::endl;
                     }
+                    // if we are in the scanning state, we need to parse the data
+                    if (scanner.currentState == ScannerState::SCANNING)
+                    {
+                        // parse the data
+                        std::cout << "Parsing data: ";
+                        int ret = valueProcessor(rx_string, &scanner);
+                        if(ret != 5){
+                            // TODO this always happens, why?
+                            std::cout << "Error parsing data" << std::endl;
+                        }else{
+                            scanner.newCurrentState = true;
+                            std::cout << scanner.currentYawAngle << " " << scanner.currentPitchAngle << " " << scanner.currentDistance << " " << scanner.currentPoint << " " << scanner.lastPoint << std::endl;
+                        }
+                    }
+
                     scanner.message = rx_string;
                     scanner.mutex.unlock();
                     rx_data.clear();
@@ -196,13 +263,15 @@ void SerialThread()
                 scanner.mutex.unlock();
                 if (setNewState)
                 {
-                    std::cout << "New state" << std::endl;
+                    std::cout << "# Sending new command: ";
                     // generate the command
-                    std::string command = GenerateCommand(scanner.currentState, scan_resolution, horizontal_angle, vertical_angle);
+                    std::string command = GenerateCommand(scanner.currentState, scan_resolution, horizontal_angle, vertical_angle, &scanner);
                     std::cout << command << std::endl;
                     // send the command
                     device.writeBytes(command.c_str(), command.size());
                     device.flushReceiver();
+                    // sleep for 100ms
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
                 }
 
             }
@@ -506,6 +575,22 @@ void guiThread()
             window_flags |= ImGuiWindowFlags_NoMove;
             window_flags |= ImGuiWindowFlags_NoScrollbar;
 
+            // check if settings_sending_progress is not START
+            // if not set the new state to true
+            // this will trigger the serial thread to send the settings
+            if (settings_sending_progress != SettingsSendingProgress::START && generate_initial_settings)
+            {
+                scanner.mutex.lock();
+                scanner.setNewState = true;
+                scanner.mutex.unlock();
+            } else if (settings_sending_progress == SettingsSendingProgress::START && start && generate_initial_settings){
+                scanner.mutex.lock();
+                scanner.setNewState = true;
+                scanner.mutex.unlock();
+                start = false;
+            }
+
+
             ImGui::Begin("TOF GUI", NULL, window_flags); // Create a window and append into it.
             ImGui::SetWindowSize(ImVec2(window_width, window_height));
             ImGui::SetWindowPos(ImVec2(0, 0));
@@ -524,32 +609,6 @@ void guiThread()
             // checkbox for vsync
             ImGui::Checkbox("Vsync", &vsync);
             glfwSwapInterval(vsync);
-
-            // insert some padding
-            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 20);
-
-            // Add a slider to define the resolution of the scan
-            ImGui::SetCursorPosX((300 - 100) / 2);
-            ImGui::Text("Scan resolution\n(points per degree)");
-            ImGui::SetCursorPosX((300 - 100) / 4);
-            ImGui::SliderInt("##Scan resolution", &scan_resolution, 1, 20);
-
-            set_resolution = ImGui::Button("Set resolution", ImVec2(100, 20));
-
-            // Add a sliders for the horizontal and vertical angle of the scan (in degrees)
-            ImGui::SetCursorPosX((300 - 100) / 2);
-            ImGui::Text("Horizontal angle");
-            ImGui::SetCursorPosX((300 - 100) / 4);
-            ImGui::SliderInt("##Horizontal angle", &horizontal_angle, 1, 360);
-
-            set_horizontal_angle = ImGui::Button("Set horizontal angle", ImVec2(100, 20));
-
-            ImGui::SetCursorPosX((300 - 100) / 2);
-            ImGui::Text("Vertical angle");
-            ImGui::SetCursorPosX((300 - 100) / 4);
-            ImGui::SliderInt("##Vertical angle", &vertical_angle, 1, 120);
-
-            set_vertical_angle = ImGui::Button("Set vertical angle", ImVec2(100, 20));
 
             start = ImGui::Button("Start scan", ImVec2(100, 20));
 
@@ -910,6 +969,7 @@ void guiThread()
 
             case ScannerState::READY:
                 first_start = false;
+                scanner.setNewState = true;
                 break;
             
             default:
