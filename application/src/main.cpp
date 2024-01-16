@@ -36,6 +36,8 @@ static void glfw_error_callback(int error, const char *description)
 #define Y_MAX 1000
 
 float *points = new float[3 * X_MAX * Y_MAX];
+float *polar_points = new float[3 * X_MAX * Y_MAX];
+uint number_of_polar_points = 0;
 
 static int scan_resolution = 1;
 static int vertical_angle = 90;
@@ -100,12 +102,14 @@ bool StringToScannerState(const std::string &input, ScannerState *state)
 {
     std::cout << "looking up state for: " << input << std::endl << "Current state: " << (int)*state << std::endl;
     static const std::unordered_map<std::string, ScannerState> stringToState = {
+        {"Uncalibrated", ScannerState::UNKNOWN},
+        {"Calibration initiated", ScannerState::POSITIONING},
         {"FOUND STAND", ScannerState::CALIBRATING},
         {"LOST STAND", ScannerState::CALIBRATING},
         {"moving left:", ScannerState::CALIBRATING},
         {"moving right:", ScannerState::CALIBRATING},
-        {"Calibration initiated", ScannerState::POSITIONING},
         {"steps:", ScannerState::READY},
+        {"Calibrated", ScannerState::READY},
         {"Scan started", ScannerState::SCANNING},
         {"Scan complete", ScannerState::COMPLETE}};
 
@@ -138,7 +142,7 @@ int valueProcessor(const std::string &input, SharedState *state)
     // parse the string
     // -30.000000;-180.000000;0.340236;10;564\r\n
     // yaw;pitch;distance;current_point;last_point
-    return sscanf(input.c_str(), "%f;%f;%*f;%*d;%*d",
+    return sscanf(input.c_str(), "%f;%f;%f;%d;%d",
     &state->currentYawAngle, &state->currentPitchAngle,
     &state->currentDistance, &state->currentPoint, &state->lastPoint);
 }
@@ -202,6 +206,7 @@ std::string GenerateCommand(ScannerState currentState, int resolution, float yaw
     return command.str();
 }
 
+bool first_start = true;
 std::mutex serialDlMutex;
 double deltaSerialTime = 0.0; // time between two screenshots
 void SerialThread()
@@ -215,6 +220,37 @@ void SerialThread()
             // bool new_data = false;
             std::vector<uint8_t> rx_data;
             std::vector<uint8_t> tx_data;
+            
+            if(first_start){
+                // we ask the device if it's already calibrated
+                std::string check_calibration_command = "needcal\r\n";
+                device.flushReceiver();
+                device.writeBytes(check_calibration_command.c_str(), check_calibration_command.size());
+                // sleep for 100ms
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                // read the response
+                bool done_reading = false;
+                while(!done_reading){
+                    char read = 0;
+                    device.readChar(&read, 2);
+                    if (read != 0)
+                    {
+                        rx_data.push_back(read);
+                        std::cout << read;
+                    }
+                    // check if rx_data ends with a \r\n
+                    if (rx_data.size() > 1 && rx_data[rx_data.size() - 1] == '\n')
+                    {
+                        std::string rx_string(rx_data.begin(), rx_data.end());
+                        std::cout << "Received: " << rx_string << std::endl;
+                        StringToScannerState(rx_string, &scanner.currentState);
+                        done_reading = true;
+                    }
+                }
+                // clear the rx_data
+                rx_data.clear();
+            }
+
             while (true)
             {
                 char read = 0;
@@ -244,11 +280,14 @@ void SerialThread()
                         std::cout << "Parsing data: ";
                         int ret = valueProcessor(rx_string, &scanner);
                         if(ret != 5){
-                            // TODO this always happens, why?
                             std::cout << "Error parsing data" << std::endl;
-                        }else{
+                        }else{                            
                             scanner.newCurrentState = true;
-                            std::cout << scanner.currentYawAngle << " " << scanner.currentPitchAngle << " " << scanner.currentDistance << " " << scanner.currentPoint << " " << scanner.lastPoint << std::endl;
+                            polar_points[3 * scanner.currentPoint] = scanner.currentYawAngle;
+                            polar_points[3 * scanner.currentPoint + 1] = scanner.currentPitchAngle;
+                            polar_points[3 * scanner.currentPoint + 2] = scanner.currentDistance;
+                            number_of_polar_points++;
+                            printf("parsed: %f %f %f %d %d\n", scanner.currentYawAngle, scanner.currentPitchAngle, scanner.currentDistance, scanner.currentPoint, scanner.lastPoint);
                         }
                     }
 
@@ -316,7 +355,6 @@ uint window_height = 800;
 GLuint textureID;
 void guiThread()
 {
-    static bool first_start = true;
 
     glfwSetErrorCallback(glfw_error_callback);
     if (!glfwInit())
@@ -376,13 +414,10 @@ void guiThread()
     // TODO clean this up
 
     // glm::mat4 ver_mat = glm::mat4(1.0f);
-    glm::vec3 rot = glm::vec3(0.5f, 0.0f, 0.0f);
+    glm::vec3 rot = glm::vec3(-0.5f, 0.0f, 0.0f);
     glm::vec3 trans = glm::vec3(0.0f, 0.0f, 0.0f);
     glm::vec3 points_color = glm::vec3(0.0f, 0.0f, 0.6f);
     float color[4] = {0.0, 0.3, 0.0, 0.0};
-
-    float freq = 1;
-    float old_freq = !freq;
 
     // axis indicator
     float axis[3 * 6] = {
@@ -614,15 +649,17 @@ void guiThread()
 
             // Create a progress bar
             ImGui::Text("Scan Progress");
-            static float progress = 0.0f, progress_dir = 1.0f;
-            ImGui::ProgressBar(progress, ImVec2(0.0f, 0.0f));
-            progress += progress_dir * 0.4f * ImGui::GetIO().DeltaTime;
-            if (progress >= +1.1f)
-            {
-                progress = 0.0f;
+            scanner.mutex.lock();
+            float progress = 0.0f;
+            if(scanner.currentState == ScannerState::COMPLETE){
+                progress = 1.0f;
+            }else{
+                progress = (float)scanner.currentPoint / (float)scanner.lastPoint;
             }
 
-            ImGui::Text("Progress raw: %.1f", progress);
+            ImGui::ProgressBar(progress, ImVec2(0.0f, 0.0f));
+
+            scanner.mutex.unlock();
 
             // plot 3D data
 
@@ -642,24 +679,14 @@ void guiThread()
             color[2] = back_color.z;
             color[3] = back_color.w;
 
-            ImGui::ColorEdit3("Points color", (float *)&point_color);
-
-            // shove point_color into points_color
-            points_color[0] = point_color.x;
-            points_color[1] = point_color.y;
-            points_color[2] = point_color.z;
 
             ImGui::SliderFloat3("Rotation", glm::value_ptr(rot), 0, 1);
 
             ImGui::SliderFloat3("Translation", glm::value_ptr(trans), 0, 1);
 
-            static bool auto_increment = false;
-            ImGui::Checkbox("Auto increment", &auto_increment);
+            static float scale = 1.0f;
 
-            if (auto_increment)
-                freq = 10 * progress;
-
-            ImGui::SliderFloat("Freq", &freq, 0.01, 10);
+            ImGui::SliderFloat("Scale", &scale, 0.00001f, 10.0f);
 
             glBindVertexArray(VAO);
             glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
@@ -680,20 +707,36 @@ void guiThread()
             glClearColor(color[0], color[1], color[2], color[3]);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-            if (freq != old_freq)
+            static uint old_polar_points = 0;
+            static float old_scale = 0.0f;
+
+            if (number_of_polar_points != old_polar_points || scale != old_scale)
             {
 
-                for (int x = 0; x < X_MAX; x++)
-                {
-                    for (int y = 0; y < Y_MAX; y++)
-                    {
-                        int position = 3 * (x + (y * Y_MAX));
-                        points[position + 0] = 0.5f * ((float)x / (X_MAX));
-                        points[position + 1] = 0.5f * (float)y / (Y_MAX);
-                        points[position + 2] = 0.5f * ((float)y / (Y_MAX)*sin(freq * glm::two_pi<float>() * (float)x / (X_MAX)));
+                scanner.mutex.lock();
+                float scanner_pitch = scanner.pitchAngle; // Maximum pitch angle in degrees
+                float scanner_yaw = scanner.yawAngle; // Maximum yaw angle in degrees
+                scanner.mutex.unlock();
+
+                float pitch_step = scanner_pitch / Y_MAX;
+                float yaw_step = scanner_yaw / X_MAX;
+
+                for (int x = 0; x < X_MAX; x++) {
+                    for (int y = 0; y < Y_MAX; y++) {
+                        int polar_position = 3 * (x + (y * Y_MAX));
+                        float pitch = glm::radians(polar_points[polar_position + 0]);
+                        float yaw = glm::radians(polar_points[polar_position + 1]);
+                        float distance = polar_points[polar_position + 2] * scale;
+
+                        int cartesian_position = 3 * (x + (y * Y_MAX));
+                        points[cartesian_position + 0] = distance * cos(yaw) * cos(pitch);
+                        points[cartesian_position + 1] = distance * sin(pitch);
+                        points[cartesian_position + 2] = distance * sin(yaw) * cos(pitch);
                     }
                 }
-                old_freq = freq;
+
+                old_polar_points = number_of_polar_points;
+                old_scale = scale;
             }
 
             glm::mat4 temp = glm::make_mat4(cameraView);
@@ -912,6 +955,7 @@ void guiThread()
                 // center the button
                 ImGui::SetCursorPosX((300 - 100) / 2);
                 ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 20);
+                
                 scanner.mutex.lock();
                 scanner.setNewState = ImGui::Button("Apply", ImVec2(100, 20));
                 scanner.mutex.unlock();

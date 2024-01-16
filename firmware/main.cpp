@@ -14,7 +14,7 @@
 #include "lib/pwm.hpp"
 
 #define PITCH_OFFSET 40.0
-#define CALIB_STAND_VAL 0.18f
+#define CALIB_STAND_VAL 0.22f
 #define YAW_STOP 1495
 #define BASE_YAW_STEP 20
 #define BASE_YAW_DELAY 50
@@ -69,6 +69,7 @@ float deg_yaw = 0.0;
 float deg_pitch = 0.0;
 uint points_per_deg = 1;
 bool scan_in_progress = false;
+bool calibrated = false; 
 
 uint pitch_to_us(float pitch)
 {
@@ -151,6 +152,12 @@ void processCommand(char* fullCommand){
         setScanAnglePitch(atof(arg));
     } else if (strcmp(command, "scstart") == 0) {
         startScan();
+    } else if (strcmp(command, "needcal") == 0) {
+        if(calibrated){
+            printf("Calibrated\n");
+        }else{
+            printf("Uncalibrated\n");
+        }
     } else {
         printf("Invalid command or missing argument: %s\n", fullCommand);
     }
@@ -433,8 +440,6 @@ int main()
 
     sleep_ms(10);
 
-    bool calibrated = false; 
-
     float current_yaw = 0.0;
     float current_pitch = 0.0;
 
@@ -522,17 +527,17 @@ int main()
                 }
 
                 if (unit_dir && current_yaw >= deg_yaw) {
+                    printf("Scan complete\n");
                     printf("%f > %f\n", current_yaw, deg_yaw);
                     break; // Break if we've reached or exceeded the positive limit
                 }
                 if (!unit_dir && current_yaw <= -deg_yaw) {
+                    printf("Scan complete\n");
                     printf("%f < %f\n", current_yaw, -deg_yaw);
                     break; // Break if we've reached or exceeded the negative limit
                 }
 
             }
-            // scan complete
-            printf("Scan complete\n");
 
             scan_in_progress = false;
         }else if(scan_in_progress){
