@@ -533,6 +533,8 @@ void guiThread()
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(0);
 
+    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
+
     unsigned int texture;
     glGenTextures(1, &texture);
     GLuint framebuffer;
@@ -680,13 +682,19 @@ void guiThread()
             color[3] = back_color.w;
 
 
-            ImGui::SliderFloat3("Rotation", glm::value_ptr(rot), 0, 1);
+            ImGui::SliderFloat3("Rotation", glm::value_ptr(rot), -1, 1);
 
-            ImGui::SliderFloat3("Translation", glm::value_ptr(trans), 0, 1);
+            ImGui::SliderFloat3("Translation", glm::value_ptr(trans), -1, 1);
 
             static float scale = 1.0f;
 
             ImGui::SliderFloat("Scale", &scale, 0.00001f, 10.0f);
+
+            static float point_size = 1.0;
+            ImGui::SliderFloat("Point size", &point_size, 0.1f, 10.0f);
+
+            // set the point size
+            glPointSize(point_size);
 
             glBindVertexArray(VAO);
             glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
@@ -709,8 +717,9 @@ void guiThread()
 
             static uint old_polar_points = 0;
             static float old_scale = 0.0f;
+            static float old_point_size = 0.0f;
 
-            if (number_of_polar_points != old_polar_points || scale != old_scale)
+            if (number_of_polar_points != old_polar_points || scale != old_scale || point_size != old_point_size)
             {
 
                 scanner.mutex.lock();
@@ -737,6 +746,7 @@ void guiThread()
 
                 old_polar_points = number_of_polar_points;
                 old_scale = scale;
+                old_point_size = point_size;
             }
 
             glm::mat4 temp = glm::make_mat4(cameraView);
